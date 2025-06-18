@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Jellyfin.Plugin.Template.ScheduledTasks;
+using Jellyfin.Plugin.MediathekViewMover.ScheduledTasks;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Template.LibaryScanTasks
+namespace Jellyfin.Plugin.MediathekViewMover.LibaryScanTasks
 {
     /// <inheritdoc/>
     public class ExampleLibaryPostScanTask : ILibraryPostScanTask

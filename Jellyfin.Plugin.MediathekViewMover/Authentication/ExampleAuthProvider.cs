@@ -7,7 +7,7 @@ using Jellyfin.Data.Entities;
 using MediaBrowser.Controller.Authentication;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Template.Authentication
+namespace Jellyfin.Plugin.MediathekViewMover.Authentication
 {
     /// <inheritdoc/>
     public class ExampleAuthProvider : IAuthenticationProvider

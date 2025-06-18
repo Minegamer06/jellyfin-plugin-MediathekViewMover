@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.Template.LibaryExamples;
-using Jellyfin.Plugin.Template.UserExamples;
+using Jellyfin.Plugin.MediathekViewMover.LibaryExamples;
+using Jellyfin.Plugin.MediathekViewMover.UserExamples;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Jellyfin.Plugin.Template.ScheduledTasks
+namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
 {
     /// <inheritdoc/>
     public class ExampleScheduledTask : IScheduledTask

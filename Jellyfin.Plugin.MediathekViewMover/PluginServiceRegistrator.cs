@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.Template.LibaryExamples;
-using Jellyfin.Plugin.Template.UserExamples;
+using Jellyfin.Plugin.MediathekViewMover.LibaryExamples;
+using Jellyfin.Plugin.MediathekViewMover.UserExamples;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Jellyfin.Plugin.Template
+namespace Jellyfin.Plugin.MediathekViewMover
 {
     /// <summary>
     /// Register Plugin Services.

@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MediaBrowser.Controller.Library;
 
-namespace Jellyfin.Plugin.Template.UserExamples
+namespace Jellyfin.Plugin.MediathekViewMover.UserExamples
 {
     /// <summary>
     /// Info Class.

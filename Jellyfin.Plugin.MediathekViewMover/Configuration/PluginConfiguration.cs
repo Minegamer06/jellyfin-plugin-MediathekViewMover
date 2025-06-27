@@ -63,5 +63,3 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public List<MoverTask> MoverTasks { get; set; }
 }
-
-

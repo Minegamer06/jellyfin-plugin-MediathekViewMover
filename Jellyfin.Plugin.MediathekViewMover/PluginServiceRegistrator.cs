@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.MediathekViewMover.LibaryExamples;
+using Jellyfin.Plugin.MediathekViewMover.Services;
+using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
 using Jellyfin.Plugin.MediathekViewMover.UserExamples;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
@@ -21,6 +23,10 @@ namespace Jellyfin.Plugin.MediathekViewMover
         {
             serviceCollection.AddSingleton<LibaryInfo>();
             serviceCollection.AddSingleton<UserInfo>();
+            serviceCollection.AddSingleton<IFileInfoService, FileInfoService>();
+            serviceCollection.AddSingleton<LanguageService>();
+            serviceCollection.AddSingleton<MediaConversionService>();
+            serviceCollection.AddSingleton<TaskProcessorService>();
         }
     }
 }

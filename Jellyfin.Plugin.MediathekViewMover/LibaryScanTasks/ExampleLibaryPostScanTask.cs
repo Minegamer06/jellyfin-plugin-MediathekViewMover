@@ -36,7 +36,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.LibaryScanTasks
             await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
             if (Plugin.Instance?.Configuration.TrueFalseSetting == true)
             {
-                _taskManager.Execute<ExampleScheduledTask>();
+                _taskManager.Execute<MediathekViewMoverTask>();
             }
 
             _logger.LogInformation("Task - Complete: {Name}", nameof(ExampleLibaryPostScanTask));

@@ -1,6 +1,6 @@
 ---
-name: "Template"
-guid: "eb5d7894-8eef-4b36-aa6f-5d124e828ce1"
+name: "MediathekViewMover"
+guid: "18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A"
 version: "0.1.0.0"
 targetAbi: "10.10.7.0"
 framework: "net8.0"
@@ -11,6 +11,6 @@ description: >
 category: "General"
 owner: "Minegamer06"
 artifacts:
-- "Jellyfin.Plugin.Template.dll"
+- "Jellyfin.Plugin.MediathekViewMover.dll"
 changelog: >
   changelog

@@ -3,6 +3,67 @@
 <head>
     <meta charset="utf-8">
     <title>Template</title>
+    <style>
+        .folderMappingItem {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .folderMappingItem label {
+            flex: 1 1 100%;
+            margin-bottom: 5px;
+        }
+
+        .folderMappingItem input {
+            flex: 1 1 calc(25% - 10px);
+        }
+
+        .removeFolderMapping {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .removeFolderMapping:hover {
+            background-color: #ff1a1a;
+        }
+
+        .folderDialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .folderDialog input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .folderDialog button {
+            margin-right: 10px;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+    </style>
 </head>
 <body>
     <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
@@ -32,6 +93,14 @@
                         <input id="AString" name="AString" type="text" is="emby-input" />
                         <div class="fieldDescription">Another Description</div>
                     </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel">Folder Mappings</label>
+                        <div id="FolderMappingsList"></div>
+                        <button type="button" is="emby-button" class="raised emby-button" id="AddFolderMappingBtn">
+                            <span>Mapping hinzufügen</span>
+                        </button>
+                        <div class="fieldDescription">Definiere hier die Ordner-Zuordnungen für den Mover.</div>
+                    </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -40,10 +109,51 @@
                 </form>
             </div>
         </div>
+        <div class="overlay" id="folderDialogOverlay"></div>
+        <div class="folderDialog" id="folderDialog">
+            <label for="folderPathInput">Select Folder Path:</label>
+            <input type="text" id="folderPathInput" placeholder="Enter folder path or browse...">
+            <button id="folderDialogConfirm">Confirm</button>
+            <button id="folderDialogCancel">Cancel</button>
+        </div>
         <script type="text/javascript">
             var TemplateConfig = {
-                pluginUniqueId: 'eb5d7894-8eef-4b36-aa6f-5d124e828ce1'
+                pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
             };
+
+            function renderFolderMappings(mappings) {
+                var list = document.getElementById('FolderMappingsList');
+                list.innerHTML = '';
+                mappings.forEach(function(mapping, idx) {
+                    var div = document.createElement('div');
+                    div.className = 'folderMappingItem';
+                    div.innerHTML =
+                        '<label for="folderMappingTitle' + idx + '">Title</label>'
+                        + '<input id="folderMappingTitle' + idx + '" type="text" placeholder="Title" class="folderMappingTitle emby-input" value="' + (mapping.Title || '') + '" /> '
+                        + '<label for="folderMappingMinCount' + idx + '">MinCount</label>'
+                        + '<input id="folderMappingMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="folderMappingMinCount emby-input" value="' + (mapping.MinCount || 0) + '" /> '
+                        + '<label for="folderMappingSource' + idx + '">Source Folder</label>'
+                        + '<input id="folderMappingSource' + idx + '" type="text" placeholder="Source Folder" class="folderMappingSource emby-input" value="' + (mapping.SourceShowFolder || '') + '" /> '
+                        + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Source\')">Select</button>'
+                        + '<label for="folderMappingTarget' + idx + '">Target Folder</label>'
+                        + '<input id="folderMappingTarget' + idx + '" type="text" placeholder="Target Folder" class="folderMappingTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" /> '
+                        + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Target\')">Select</button>'
+                        + '<button type="button" class="removeFolderMapping emby-button">Entfernen</button>';
+                    // Remove-Button Event
+                    div.querySelector('.removeFolderMapping').onclick = function() {
+                        mappings.splice(idx, 1);
+                        renderFolderMappings(mappings);
+                    };
+                    // Change-Events
+                    div.querySelector('.folderMappingTitle').oninput = function(e) { mapping.Title = e.target.value; };
+                    div.querySelector('.folderMappingMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 0; };
+                    div.querySelector('.folderMappingSource').oninput = function(e) { mapping.SourceShowFolder = e.target.value; };
+                    div.querySelector('.folderMappingTarget').oninput = function(e) { mapping.TargetShowFolder = e.target.value; };
+                    list.appendChild(div);
+                });
+            }
+
+            var currentFolderMappings = [];
 
             document.querySelector('#TemplateConfigPage')
                 .addEventListener('pageshow', function() {
@@ -53,26 +163,56 @@
                         document.querySelector('#AnInteger').value = config.AnInteger;
                         document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
                         document.querySelector('#AString').value = config.AString;
+                        currentFolderMappings = config.FolderMappings || [];
+                        renderFolderMappings(currentFolderMappings);
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
+            document.getElementById('AddFolderMappingBtn').onclick = function() {
+                currentFolderMappings.push({ Title: '', MinCount: 0, SourceShowFolder: '', TargetShowFolder: '' });
+                renderFolderMappings(currentFolderMappings);
+            };
+
             document.querySelector('#TemplateConfigForm')
                 .addEventListener('submit', function(e) {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                    config.Options = document.querySelector('#Options').value;
-                    config.AnInteger = document.querySelector('#AnInteger').value;
-                    config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                        config.Options = document.querySelector('#Options').value;
+                        config.AnInteger = document.querySelector('#AnInteger').value;
+                        config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
+                        config.AString = document.querySelector('#AString').value;
+                        config.FolderMappings = currentFolderMappings;
+                        ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
                     });
+
+                    e.preventDefault();
+                    return false;
                 });
 
-                e.preventDefault();
-                return false;
-            });
+            function openFolderDialog(index, type) {
+                const picker = new Dashboard.DirectoryBrowser();
+                picker.show({
+                    header: type === "Source" ? "Select Source Folder" : "Select Target Folder",
+                    includeDirectories: true,
+                    includeFiles: false,
+                    callback: function (path) {
+                        if (path) {
+                            if (type === "Source") {
+                                currentFolderMappings[index].SourceShowFolder = path;
+                                document.getElementById('folderMappingSource' + index).value = path;
+                            } else if (type === "Target") {
+                                currentFolderMappings[index].TargetShowFolder = path;
+                                document.getElementById('folderMappingTarget' + index).value = path;
+                            }
+                        }
+
+                        picker.close();
+                    }
+                });
+            }
         </script>
     </div>
 </body>

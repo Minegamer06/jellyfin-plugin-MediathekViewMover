@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Jellyfin.Plugin.MediathekViewMover.Models;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Configuration;
@@ -33,10 +35,11 @@ public class PluginConfiguration : BasePluginConfiguration
         TrueFalseSetting = true;
         AnInteger = 2;
         AString = "string";
+        MoverTasks = [];
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether some true or false setting is enabled..
+    /// Gets or sets a value indicating whether some true or false setting is enabled.
     /// </summary>
     public bool TrueFalseSetting { get; set; }
 
@@ -54,4 +57,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets an enum option.
     /// </summary>
     public SomeOptions Options { get; set; }
+
+    /// <summary>
+    /// Gets or sets a list of MoverTasks.
+    /// </summary>
+    public List<MoverTask> MoverTasks { get; set; }
 }
+
+

@@ -104,6 +104,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             {
                 return false;
             }
+
             ageThreshold ??= TimeSpan.Zero;
             var currentTime = fileInfo.LastWriteTime;
             if (_fileTimestamps.TryGetValue(filePath, out DateTime lastCheck) && _fileSizes.TryGetValue(filePath, out long fileSize))
@@ -314,4 +315,3 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         }
     }
 }
-

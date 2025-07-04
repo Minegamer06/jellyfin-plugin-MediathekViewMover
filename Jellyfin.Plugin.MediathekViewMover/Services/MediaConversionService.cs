@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov"];
         private static readonly string[] SubtitleExtensions = [".srt", ".ass", ".ssa"];
         private static readonly string[] UnsupportedExtensions = [".ttml"];
+        private readonly CultureInfo _defaultCulture = CultureInfo.GetCultureInfo("de");
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MediaConversionService"/> class.
@@ -91,7 +93,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 }
 
                 // Erkenne Sprache des Hauptvideos
-                var mainLang = _languageService.GetLanguageFromFileName(mainVideo);
+                var mainLang = _languageService.GetLanguageFromFileName(mainVideo, _defaultCulture);
                 var args = FFMpegArguments.FromFileInput(mainVideo);
 
                 var selectedStream = new List<(string FilePath, Channel Channel)>();
@@ -111,36 +113,41 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
                 await args.OutputToFile(targetPath, true, options =>
                 {
+                    // Setze allgemeine Codec-Argumente für Audio und Untertitel
+                    options.WithCustomArgument("-c:a copy")
+                        .WithCustomArgument("-c:s copy")
+                        .WithCustomArgument("-c:v copy");
+
                     // Kopiere Video vom Hauptvideo
+                    options.SelectStream(0, 0, Channel.Video)
+                        .SelectStream(0, 0, Channel.Audio);
                     // Setze die Hauptaudiospur
                     options
-                        .WithAudioCodec(0, AudioCodec.Copy)
                         .WithCustomArgument($"-metadata:s:a:0 language={mainLang}")
                         .WithCustomArgument("-disposition:a:0 default");
 
                     // Füge zusätzliche Audiospuren hinzu
                     for (int i = 0; i < additionalFiles.Count; i++)
                     {
-                        var lang = _languageService.GetLanguageFromFileName(additionalFiles[i]);
+                        var lang = _languageService.GetLanguageFromFileName(additionalFiles[i], _defaultCulture);
                         options
-                            .WithAudioCodec(i + 1, AudioCodec.Copy)
+                            .SelectStream(0, i + 1, Channel.Audio)
                             .WithCustomArgument($"-metadata:s:a:{i + 1} language={lang}")
-                            .WithCustomArgument($"-disposition:a:{i + 1} 0")
-                            .WithCustomArgument($"-map {i + 1}:a:0");
+                            .WithCustomArgument($"-disposition:a:{i + 1} 0");
                     }
 
                     // Füge Untertitel hinzu
                     for (int i = 0; i < subtitleFiles.Count; i++)
                     {
-                        var lang = _languageService.GetLanguageFromFileName(subtitleFiles[i]);
+                        var lang = _languageService.GetLanguageFromFileName(subtitleFiles[i], _defaultCulture);
                         var inputIndex = additionalFiles.Count + i + 1;
                         options
-                            .WithCustomArgument($"-map {inputIndex}:0")
+                            .SelectStream(0, i + 1, Channel.Subtitle)
                             .WithCustomArgument($"-metadata:s:s:{i} language={lang}")
                             .WithCustomArgument($"-disposition:s:{i} 0");
                     }
                 })
-                .ProcessAsynchronously(true, cancellationToken).ConfigureAwait(false);
+                .ProcessAsynchronously().ConfigureAwait(false);
 
                 _logger.LogInformation(
                     "Medien erfolgreich zusammengeführt: {Main} + {Additional} Audiospuren + {Subs} Untertitel -> {Target}",

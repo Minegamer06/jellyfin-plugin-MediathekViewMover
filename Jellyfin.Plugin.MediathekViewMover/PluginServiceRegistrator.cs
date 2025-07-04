@@ -1,12 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Jellyfin.Plugin.MediathekViewMover.LibaryExamples;
 using Jellyfin.Plugin.MediathekViewMover.Services;
 using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
-using Jellyfin.Plugin.MediathekViewMover.UserExamples;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +14,6 @@ namespace Jellyfin.Plugin.MediathekViewMover
         /// <inheritdoc/>
         public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
         {
-            serviceCollection.AddSingleton<LibaryInfo>();
-            serviceCollection.AddSingleton<UserInfo>();
             serviceCollection.AddSingleton<IFileInfoService, FileInfoService>();
             serviceCollection.AddSingleton<LanguageService>();
             serviceCollection.AddSingleton<MediaConversionService>();

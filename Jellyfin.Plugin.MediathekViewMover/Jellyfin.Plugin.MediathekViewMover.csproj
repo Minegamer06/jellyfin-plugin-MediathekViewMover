@@ -7,15 +7,18 @@
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FFMpegCore" Version="5.2.0" />
-    <PackageReference Include="Jellyfin.Controller" Version="10.9.11" />
-    <PackageReference Include="Jellyfin.Model" Version="10.9.11" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <!-- FFMpegCore und seine Dependencies werden mit dem Plugin ausgeliefert -->
+    <PackageReference Include="FFMpegCore" Version="5.0.0" PrivateAssets="All" />
+    
+    <!-- Jellyfin-Pakete werden nicht mit ausgeliefert, da sie vom Server bereitgestellt werden -->
+    <PackageReference Include="Jellyfin.Controller" Version="10.9.11" Private="false" ExcludeAssets="runtime;native" />
+    <PackageReference Include="Jellyfin.Model" Version="10.9.11" Private="false" ExcludeAssets="runtime;native" />
+    
+    <!-- Analyzer-Pakete werden nur zur Entwicklungszeit verwendet -->
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
     <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />

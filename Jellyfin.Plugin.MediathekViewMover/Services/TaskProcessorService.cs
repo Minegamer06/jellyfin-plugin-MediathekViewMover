@@ -4,8 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FFMpegCore;
 using Jellyfin.Plugin.MediathekViewMover.Models;
 using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
+using MediaBrowser.Controller;
+using MediaBrowser.Controller.MediaEncoding;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Services
@@ -18,6 +21,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private readonly ILogger<TaskProcessorService> _logger;
         private readonly MediaConversionService _mediaConverter;
         private readonly IFileInfoService _fileInfoService;
+        private readonly FFOptions _ffOptions;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskProcessorService"/> class.
@@ -25,14 +29,23 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <param name="logger">Der Logger für den Service.</param>
         /// <param name="mediaConverter">Service für Medienkonvertierung.</param>
         /// <param name="fileInfoService">Service für Dateioperationen.</param>
+        /// <param name="configPaths">Server Configs Paths.</param>
+        /// <param name="mediaEncoder">Media Encoder.</param>
         public TaskProcessorService(
             ILogger<TaskProcessorService> logger,
             MediaConversionService mediaConverter,
-            IFileInfoService fileInfoService)
+            IFileInfoService fileInfoService,
+            IServerApplicationPaths configPaths,
+            IMediaEncoder mediaEncoder)
         {
             _logger = logger;
             _mediaConverter = mediaConverter;
             _fileInfoService = fileInfoService;
+            _ffOptions = new FFOptions();
+            string tempDir = configPaths.TempDirectory;
+            _ffOptions.TemporaryFilesFolder = Path.Combine(tempDir, "MediathekViewMover");
+            string ffmpegPath = mediaEncoder.EncoderPath;
+            _logger.LogInformation("FFmpeg Pfad: {Path}", ffmpegPath);
         }
 
         /// <summary>

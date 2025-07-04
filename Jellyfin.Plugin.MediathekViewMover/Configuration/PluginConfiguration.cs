@@ -59,7 +59,9 @@ public class PluginConfiguration : BasePluginConfiguration
     public SomeOptions Options { get; set; }
 
     /// <summary>
-    /// Gets or sets a list of MoverTasks.
+    /// Gets a list of MoverTasks.
     /// </summary>
-    public List<MoverTask> MoverTasks { get; set; }
+    #pragma warning disable CA1002
+    public List<MoverTask> MoverTasks { get; }
+    #pragma warning restore CA1002
 }

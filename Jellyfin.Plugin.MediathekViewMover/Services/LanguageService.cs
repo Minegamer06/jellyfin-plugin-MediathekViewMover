@@ -139,12 +139,14 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// Versucht, die Sprache aus einem Dateinamen zu erkennen.
         /// </summary>
         /// <param name="filePath">Der Dateipfad.</param>
+        /// <param name="fallBack">Die Sprache wenn keine Sprach erkannt wurde.</param>
         /// <returns>Der ISO-Sprachcode oder "und" wenn keine Sprache erkannt wurde.</returns>
-        public string GetLanguageFromFileName(string filePath)
+        public string GetLanguageFromFileName(string filePath, CultureInfo? fallBack = null)
         {
+            fallBack ??= CultureInfo.GetCultureInfo("und");
             var fileName = Path.GetFileNameWithoutExtension(filePath);
             var culture = GetLanguageFromText(fileName);
-            return culture?.ThreeLetterISOLanguageName ?? "und";
+            return culture?.ThreeLetterISOLanguageName ?? fallBack.ThreeLetterISOLanguageName;
         }
     }
 }

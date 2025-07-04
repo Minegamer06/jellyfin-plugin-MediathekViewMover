@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.MediathekViewMover.Models;
 using Jellyfin.Plugin.MediathekViewMover.Services;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,22 +15,18 @@ namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
     public class MediathekViewMoverTask : IScheduledTask
     {
         private readonly ILogger<MediathekViewMoverTask> _logger;
-        private readonly Plugin _plugin;
         private readonly TaskProcessorService _taskProcessor;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MediathekViewMoverTask"/> class.
         /// </summary>
         /// <param name="logger">Instance of the <see cref="ILogger{MediathekViewMoverTask}"/> interface.</param>
-        /// <param name="plugin">Instance of the Plugin class.</param>
         /// <param name="taskProcessor">Service für die Verarbeitung von Tasks.</param>
         public MediathekViewMoverTask(
             ILogger<MediathekViewMoverTask> logger,
-            Plugin plugin,
             TaskProcessorService taskProcessor)
         {
             _logger = logger;
-            _plugin = plugin;
             _taskProcessor = taskProcessor;
         }
 
@@ -51,7 +48,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
             try
             {
                 _logger.LogInformation("MediathekView Mover Task - Start");
-                var tasks = _plugin.Configuration.MoverTasks;
+                var tasks = Plugin.Instance!.Configuration.MoverTasks;
                 if (tasks.Count == 0)
                 {
                     _logger.LogWarning("Keine MoverTasks in der Konfiguration gefunden");
@@ -87,12 +84,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
         {
             return
             [
-                new TaskTriggerInfo
-                {
-                    Type = TaskTriggerInfo.TriggerWeekly,
-                    DayOfWeek = DayOfWeek.Monday,
-                    TimeOfDayTicks = TimeSpan.FromHours(3).Ticks
-                }
+                new TaskTriggerInfo { Type = TaskTriggerInfo.TriggerWeekly, DayOfWeek = DayOfWeek.Monday, TimeOfDayTicks = TimeSpan.FromHours(3).Ticks }
             ];
         }
     }

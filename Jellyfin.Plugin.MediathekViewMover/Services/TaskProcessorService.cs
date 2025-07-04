@@ -89,7 +89,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                     }
 
                     var episodeSeason = (group.Key.Season.Value, group.Key.Episode.Value);
-                    var seasonFolder = Path.Combine(task.TargetShowFolder, $"Staffel {group.Key.Season:D2}");
+                    var seasonFolder = Path.Combine(task.TargetShowFolder, $"Staffel {group.Key.Season}");
                     await ProcessEpisodeGroupAsync(episodeSeason, items, seasonFolder, cancellationToken)
                         .ConfigureAwait(false);
                 }

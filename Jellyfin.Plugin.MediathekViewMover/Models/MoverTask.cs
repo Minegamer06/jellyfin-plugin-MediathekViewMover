@@ -1,7 +1,3 @@
-// <copyright file="MoverTask.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 namespace Jellyfin.Plugin.MediathekViewMover.Models;
 
 /// <summary>
@@ -20,12 +16,12 @@ public class MoverTask
     public int MinCount { get; set; }
 
     /// <summary>
-    /// Gets or sets quell-Ordner.
+    /// Gets or sets the source folder.
     /// </summary>
     public string SourceShowFolder { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets ziel-Ordner.
+    /// Gets or sets the target folder.
     /// </summary>
     public string TargetShowFolder { get; set; } = string.Empty;
 }

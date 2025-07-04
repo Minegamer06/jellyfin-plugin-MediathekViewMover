@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Jellyfin.Plugin.MediathekViewMover.Models;
 using MediaBrowser.Model.Plugins;
+using System.Runtime.Serialization;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Configuration;
 
@@ -59,9 +60,8 @@ public class PluginConfiguration : BasePluginConfiguration
     public SomeOptions Options { get; set; }
 
     /// <summary>
-    /// Gets a list of MoverTasks.
+    /// Gets or sets a list of MoverTasks.
     /// </summary>
-    #pragma warning disable CA1002
-    public List<MoverTask> MoverTasks { get; }
-    #pragma warning restore CA1002
+    [DataMember]
+    public List<MoverTask> MoverTasks { get; set; }
 }

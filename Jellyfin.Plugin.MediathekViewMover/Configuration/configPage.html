@@ -4,23 +4,23 @@
     <meta charset="utf-8">
     <title>Template</title>
     <style>
-        .folderMappingItem {
+        .moverTaskItem {
             margin-bottom: 15px;
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
         }
 
-        .folderMappingItem label {
+        .moverTaskItem label {
             flex: 1 1 100%;
             margin-bottom: 5px;
         }
 
-        .folderMappingItem input {
+        .moverTaskItem input {
             flex: 1 1 calc(25% - 10px);
         }
 
-        .removeFolderMapping {
+        .removeMoverTask {
             background-color: #ff4d4d;
             color: white;
             border: none;
@@ -28,7 +28,7 @@
             cursor: pointer;
         }
 
-        .removeFolderMapping:hover {
+        .removeMoverTask:hover {
             background-color: #ff1a1a;
         }
 
@@ -95,8 +95,8 @@
                     </div>
                     <div class="inputContainer">
                         <label class="inputLabel">Folder Mappings</label>
-                        <div id="FolderMappingsList"></div>
-                        <button type="button" is="emby-button" class="raised emby-button" id="AddFolderMappingBtn">
+                        <div id="MoverTasksList"></div>
+                        <button type="button" is="emby-button" class="raised emby-button" id="AddMoverTaskBtn">
                             <span>Mapping hinzufügen</span>
                         </button>
                         <div class="fieldDescription">Definiere hier die Ordner-Zuordnungen für den Mover.</div>
@@ -121,39 +121,39 @@
                 pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
             };
 
-            function renderFolderMappings(mappings) {
-                var list = document.getElementById('FolderMappingsList');
+            function renderMoverTasks(mappings) {
+                var list = document.getElementById('MoverTasksList');
                 list.innerHTML = '';
                 mappings.forEach(function(mapping, idx) {
                     var div = document.createElement('div');
-                    div.className = 'folderMappingItem';
+                    div.className = 'moverTaskItem';
                     div.innerHTML =
-                        '<label for="folderMappingTitle' + idx + '">Title</label>'
-                        + '<input id="folderMappingTitle' + idx + '" type="text" placeholder="Title" class="folderMappingTitle emby-input" value="' + (mapping.Title || '') + '" /> '
-                        + '<label for="folderMappingMinCount' + idx + '">MinCount</label>'
-                        + '<input id="folderMappingMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="folderMappingMinCount emby-input" value="' + (mapping.MinCount || 0) + '" /> '
-                        + '<label for="folderMappingSource' + idx + '">Source Folder</label>'
-                        + '<input id="folderMappingSource' + idx + '" type="text" placeholder="Source Folder" class="folderMappingSource emby-input" value="' + (mapping.SourceShowFolder || '') + '" /> '
+                        '<label for="moverTaskTitle' + idx + '">Title</label>'
+                        + '<input id="moverTaskTitle' + idx + '" type="text" placeholder="Title" class="moverTaskTitle emby-input" value="' + (mapping.Title || '') + '" /> '
+                        + '<label for="moverTaskMinCount' + idx + '">MinCount</label>'
+                        + '<input id="moverTaskMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="moverTaskMinCount emby-input" value="' + (mapping.MinCount || 0) + '" /> '
+                        + '<label for="MoverTasksource' + idx + '">Source Folder</label>'
+                        + '<input id="MoverTasksource' + idx + '" type="text" placeholder="Source Folder" class="MoverTasksource emby-input" value="' + (mapping.SourceShowFolder || '') + '" /> '
                         + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Source\')">Select</button>'
-                        + '<label for="folderMappingTarget' + idx + '">Target Folder</label>'
-                        + '<input id="folderMappingTarget' + idx + '" type="text" placeholder="Target Folder" class="folderMappingTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" /> '
+                        + '<label for="moverTaskTarget' + idx + '">Target Folder</label>'
+                        + '<input id="moverTaskTarget' + idx + '" type="text" placeholder="Target Folder" class="moverTaskTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" /> '
                         + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Target\')">Select</button>'
-                        + '<button type="button" class="removeFolderMapping emby-button">Entfernen</button>';
+                        + '<button type="button" class="removeMoverTask emby-button">Entfernen</button>';
                     // Remove-Button Event
-                    div.querySelector('.removeFolderMapping').onclick = function() {
+                    div.querySelector('.removeMoverTask').onclick = function() {
                         mappings.splice(idx, 1);
-                        renderFolderMappings(mappings);
+                        renderMoverTasks(mappings);
                     };
                     // Change-Events
-                    div.querySelector('.folderMappingTitle').oninput = function(e) { mapping.Title = e.target.value; };
-                    div.querySelector('.folderMappingMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 0; };
-                    div.querySelector('.folderMappingSource').oninput = function(e) { mapping.SourceShowFolder = e.target.value; };
-                    div.querySelector('.folderMappingTarget').oninput = function(e) { mapping.TargetShowFolder = e.target.value; };
+                    div.querySelector('.moverTaskTitle').oninput = function(e) { mapping.Title = e.target.value; };
+                    div.querySelector('.moverTaskMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 0; };
+                    div.querySelector('.MoverTasksource').oninput = function(e) { mapping.SourceShowFolder = e.target.value; };
+                    div.querySelector('.moverTaskTarget').oninput = function(e) { mapping.TargetShowFolder = e.target.value; };
                     list.appendChild(div);
                 });
             }
 
-            var currentFolderMappings = [];
+            var currentMoverTasks = [];
 
             document.querySelector('#TemplateConfigPage')
                 .addEventListener('pageshow', function() {
@@ -163,15 +163,15 @@
                         document.querySelector('#AnInteger').value = config.AnInteger;
                         document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
                         document.querySelector('#AString').value = config.AString;
-                        currentFolderMappings = config.FolderMappings || [];
-                        renderFolderMappings(currentFolderMappings);
+                        currentMoverTasks = config.MoverTasks || [];
+                        renderMoverTasks(currentMoverTasks);
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
-            document.getElementById('AddFolderMappingBtn').onclick = function() {
-                currentFolderMappings.push({ Title: '', MinCount: 0, SourceShowFolder: '', TargetShowFolder: '' });
-                renderFolderMappings(currentFolderMappings);
+            document.getElementById('AddMoverTaskBtn').onclick = function() {
+                currentMoverTasks.push({ Title: '', MinCount: 0, SourceShowFolder: '', TargetShowFolder: '' });
+                renderMoverTasks(currentMoverTasks);
             };
 
             document.querySelector('#TemplateConfigForm')
@@ -182,7 +182,7 @@
                         config.AnInteger = document.querySelector('#AnInteger').value;
                         config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
                         config.AString = document.querySelector('#AString').value;
-                        config.FolderMappings = currentFolderMappings;
+                        config.MoverTasks = currentMoverTasks;
                         ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
@@ -201,11 +201,11 @@
                     callback: function (path) {
                         if (path) {
                             if (type === "Source") {
-                                currentFolderMappings[index].SourceShowFolder = path;
-                                document.getElementById('folderMappingSource' + index).value = path;
+                                currentMoverTasks[index].SourceShowFolder = path;
+                                document.getElementById('MoverTasksource' + index).value = path;
                             } else if (type === "Target") {
-                                currentFolderMappings[index].TargetShowFolder = path;
-                                document.getElementById('folderMappingTarget' + index).value = path;
+                                currentMoverTasks[index].TargetShowFolder = path;
+                                document.getElementById('moverTaskTarget' + index).value = path;
                             }
                         }
 

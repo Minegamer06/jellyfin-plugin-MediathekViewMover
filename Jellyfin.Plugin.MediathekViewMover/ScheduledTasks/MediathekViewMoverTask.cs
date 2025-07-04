@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.MediathekViewMover.Models;
 using Jellyfin.Plugin.MediathekViewMover.Services;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;

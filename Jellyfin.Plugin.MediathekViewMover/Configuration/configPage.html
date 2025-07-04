@@ -9,6 +9,10 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
+            border: 2px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: rgba(0,0,0,0.05);
         }
 
         .moverTaskItem label {
@@ -16,52 +20,32 @@
             margin-bottom: 5px;
         }
 
-        .moverTaskItem input {
-            flex: 1 1 calc(25% - 10px);
+        .moverTaskItem .field-container {
+            display: flex;
+            flex: 1 1 100%;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .moverTaskItem .field-container input {
+            flex: 1;
+        }
+
+        .moverTaskItem .field-container button {
+            flex: 0 0 auto;
+            margin-left: 10px;
+        }
+
+        .selectFolder {
+            background-color: #404040 !important;
+            color: #fff !important;
         }
 
         .removeMoverTask {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .removeMoverTask:hover {
-            background-color: #ff1a1a;
-        }
-
-        .folderDialog {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 20px;
-            z-index: 1000;
-        }
-
-        .folderDialog input {
-            width: 100%;
-            margin-bottom: 10px;
-        }
-
-        .folderDialog button {
-            margin-right: 10px;
-        }
-
-        .overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+            background-color: #c33 !important;
+            color: #fff !important;
+            align-self: flex-end;
+            margin-left: auto;
         }
     </style>
 </head>
@@ -109,13 +93,6 @@
                 </form>
             </div>
         </div>
-        <div class="overlay" id="folderDialogOverlay"></div>
-        <div class="folderDialog" id="folderDialog">
-            <label for="folderPathInput">Select Folder Path:</label>
-            <input type="text" id="folderPathInput" placeholder="Enter folder path or browse...">
-            <button id="folderDialogConfirm">Confirm</button>
-            <button id="folderDialogCancel">Cancel</button>
-        </div>
         <script type="text/javascript">
             var TemplateConfig = {
                 pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
@@ -129,24 +106,36 @@
                     div.className = 'moverTaskItem';
                     div.innerHTML =
                         '<label for="moverTaskTitle' + idx + '">Title</label>'
-                        + '<input id="moverTaskTitle' + idx + '" type="text" placeholder="Title" class="moverTaskTitle emby-input" value="' + (mapping.Title || '') + '" /> '
+                        + '<div class="field-container">'
+                        + '<input id="moverTaskTitle' + idx + '" type="text" placeholder="Title" class="moverTaskTitle emby-input" value="' + (mapping.Title || '') + '" />'
+                        + '</div>'
                         + '<label for="moverTaskMinCount' + idx + '">MinCount</label>'
-                        + '<input id="moverTaskMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="moverTaskMinCount emby-input" value="' + (mapping.MinCount || 0) + '" /> '
+                        + '<div class="field-container">'
+                        + '<input id="moverTaskMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="moverTaskMinCount emby-input" value="' + (mapping.MinCount || 1) + '" />'
+                        + '</div>'
                         + '<label for="MoverTasksource' + idx + '">Source Folder</label>'
-                        + '<input id="MoverTasksource' + idx + '" type="text" placeholder="Source Folder" class="MoverTasksource emby-input" value="' + (mapping.SourceShowFolder || '') + '" /> '
-                        + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Source\')">Select</button>'
+                        + '<div class="field-container">'
+                        + '<input id="MoverTasksource' + idx + '" type="text" placeholder="Source Folder" class="MoverTasksource emby-input" value="' + (mapping.SourceShowFolder || '') + '" />'
+                        + '<button type="button" is="emby-button" class="raised selectFolder emby-button"><span>Select</span></button>'
+                        + '</div>'
                         + '<label for="moverTaskTarget' + idx + '">Target Folder</label>'
-                        + '<input id="moverTaskTarget' + idx + '" type="text" placeholder="Target Folder" class="moverTaskTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" /> '
-                        + '<button type="button" class="selectFolder emby-button" onclick="openFolderDialog(' + idx + ', \'Target\')">Select</button>'
-                        + '<button type="button" class="removeMoverTask emby-button">Entfernen</button>';
-                    // Remove-Button Event
+                        + '<div class="field-container">'
+                        + '<input id="moverTaskTarget' + idx + '" type="text" placeholder="Target Folder" class="moverTaskTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" />'
+                        + '<button type="button" is="emby-button" class="raised selectFolder emby-button"><span>Select</span></button>'
+                        + '</div>'
+                        + '<button type="button" is="emby-button" class="raised removeMoverTask emby-button"><span>Entfernen</span></button>';
+
+                    var sourceBtn = div.querySelectorAll('.selectFolder')[0];
+                    var targetBtn = div.querySelectorAll('.selectFolder')[1];
+                    sourceBtn.onclick = function() { openFolderDialog(idx, 'Source'); };
+                    targetBtn.onclick = function() { openFolderDialog(idx, 'Target'); };
+
                     div.querySelector('.removeMoverTask').onclick = function() {
                         mappings.splice(idx, 1);
                         renderMoverTasks(mappings);
                     };
-                    // Change-Events
                     div.querySelector('.moverTaskTitle').oninput = function(e) { mapping.Title = e.target.value; };
-                    div.querySelector('.moverTaskMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 0; };
+                    div.querySelector('.moverTaskMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 1; };
                     div.querySelector('.MoverTasksource').oninput = function(e) { mapping.SourceShowFolder = e.target.value; };
                     div.querySelector('.moverTaskTarget').oninput = function(e) { mapping.TargetShowFolder = e.target.value; };
                     list.appendChild(div);
@@ -170,7 +159,7 @@
                 });
 
             document.getElementById('AddMoverTaskBtn').onclick = function() {
-                currentMoverTasks.push({ Title: '', MinCount: 0, SourceShowFolder: '', TargetShowFolder: '' });
+                currentMoverTasks.push({ Title: '', MinCount: 1, SourceShowFolder: '', TargetShowFolder: '' });
                 renderMoverTasks(currentMoverTasks);
             };
 
@@ -208,7 +197,6 @@
                                 document.getElementById('moverTaskTarget' + index).value = path;
                             }
                         }
-
                         picker.close();
                     }
                 });

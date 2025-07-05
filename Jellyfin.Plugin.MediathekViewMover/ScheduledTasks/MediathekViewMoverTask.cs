@@ -54,8 +54,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
                     return;
                 }
 
-                double progressPerTask = 100.0 / tasks.Count;
-                int currentTask = 0;
+                var totalTasks = tasks.Count;
+                var progressPerTask = 100.0 / totalTasks;
+                var currentTaskIndex = 0;
 
                 foreach (var task in tasks)
                 {
@@ -64,9 +65,16 @@ namespace Jellyfin.Plugin.MediathekViewMover.ScheduledTasks
                         break;
                     }
 
-                    await _taskProcessor.ProcessTaskAsync(task, cancellationToken).ConfigureAwait(false);
-                    currentTask++;
-                    progress.Report(currentTask * progressPerTask);
+                    // Erstelle einen Progress Reporter für diese Task
+                    var taskProgress = new Progress<double>(p =>
+                    {
+                        var baseProgress = currentTaskIndex * progressPerTask;
+                        var taskContribution = (p / 100.0) * progressPerTask;
+                        progress.Report(baseProgress + taskContribution);
+                    });
+
+                    await _taskProcessor.ProcessTaskAsync(task, cancellationToken, taskProgress).ConfigureAwait(false);
+                    currentTaskIndex++;
                 }
 
                 _logger.LogInformation("MediathekView Mover Task - Abgeschlossen");

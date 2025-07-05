@@ -1,25 +1,9 @@
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Jellyfin.Plugin.MediathekViewMover.Models;
 using MediaBrowser.Model.Plugins;
-using System.Runtime.Serialization;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Configuration;
-
-/// <summary>
-/// The configuration options.
-/// </summary>
-public enum SomeOptions
-{
-    /// <summary>
-    /// Option one.
-    /// </summary>
-    OneOption,
-
-    /// <summary>
-    /// Second option.
-    /// </summary>
-    AnotherOption
-}
 
 /// <summary>
 /// Plugin configuration.
@@ -31,37 +15,30 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration()
     {
-        // set default options here
-        Options = SomeOptions.AnotherOption;
-        TrueFalseSetting = true;
-        AnInteger = 2;
-        AString = "string";
+        DeleteSource = false;
         MoverTasks = [];
+        AudioDescriptionPatterns = new[] { "Audiodeskription", "_AD" };
+        SkipAudioDescription = false;
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether some true or false setting is enabled.
+    /// Gets or sets a value indicating whether the source should be deleted after processing.
     /// </summary>
-    public bool TrueFalseSetting { get; set; }
-
-    /// <summary>
-    /// Gets or sets an integer setting.
-    /// </summary>
-    public int AnInteger { get; set; }
-
-    /// <summary>
-    /// Gets or sets a string setting.
-    /// </summary>
-    public string AString { get; set; }
-
-    /// <summary>
-    /// Gets or sets an enum option.
-    /// </summary>
-    public SomeOptions Options { get; set; }
+    public bool DeleteSource { get; set; }
 
     /// <summary>
     /// Gets or sets a list of MoverTasks.
     /// </summary>
     [DataMember]
     public List<MoverTask> MoverTasks { get; set; }
+
+    /// <summary>
+    /// Gets or sets the patterns to identify audio description files.
+    /// </summary>
+    public string[] AudioDescriptionPatterns { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether audio description tracks should be skipped.
+    /// </summary>
+    public bool SkipAudioDescription { get; set; }
 }

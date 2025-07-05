@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using FFMpegCore;
 using FFMpegCore.Arguments;
 using FFMpegCore.Enums;
+using Jellyfin.Plugin.MediathekViewMover.Models;
+using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Services
@@ -17,52 +19,58 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
     /// </summary>
     public class MediaConversionService
     {
+        private const long SmallFileThreshold = 1024 * 1024; // 1 MB
         private readonly ILogger<MediaConversionService> _logger;
         private readonly LanguageService _languageService;
+        private readonly IAudioDescriptionService _audioDescriptionService;
         private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov"];
         private static readonly string[] SubtitleExtensions = [".srt", ".ass", ".ssa"];
-        private static readonly string[] UnsupportedExtensions = [".ttml"];
-        private readonly CultureInfo _defaultCulture = CultureInfo.GetCultureInfo("de");
+        private static readonly string[] UnsupportedExtensions = [".ttml", ".jpg"];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MediaConversionService"/> class.
         /// </summary>
         /// <param name="logger">Der Logger für den Service.</param>
         /// <param name="languageService">Der Service für Spracherkennung.</param>
-        public MediaConversionService(ILogger<MediaConversionService> logger, LanguageService languageService)
+        /// <param name="audioDescriptionService">Der Service für Audiodeskription.</param>
+        public MediaConversionService(
+            ILogger<MediaConversionService> logger,
+            LanguageService languageService,
+            IAudioDescriptionService audioDescriptionService)
         {
             _logger = logger;
             _languageService = languageService;
+            _audioDescriptionService = audioDescriptionService;
         }
 
         /// <summary>
         /// Prüft, ob eine Datei ein Video ist.
         /// </summary>
-        /// <param name="filePath">Der Dateipfad.</param>
+        /// <param name="file">Die Datei.</param>
         /// <returns>True wenn die Datei ein Video ist, sonst false.</returns>
-        public bool IsVideoFile(string filePath)
+        public bool IsVideoFile(FileInput file)
         {
-            return VideoExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant());
+            return VideoExtensions.Contains(file.File.Extension.ToLowerInvariant());
         }
 
         /// <summary>
         /// Prüft, ob eine Datei ein Untertitel ist.
         /// </summary>
-        /// <param name="filePath">Der Dateipfad.</param>
+        /// <param name="file">Die Datei.</param>
         /// <returns>True wenn die Datei ein Untertitel ist, sonst false.</returns>
-        public bool IsSubtitleFile(string filePath)
+        public bool IsSubtitleFile(FileInput file)
         {
-            return SubtitleExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant());
+            return SubtitleExtensions.Contains(file.File.Extension.ToLowerInvariant());
         }
 
         /// <summary>
-        /// Prüft, ob eine Datei ein nicht unterstütztes Format ist. Sollten nur Dateien die Heruntergeladen werden aber nicht verarbeitet werden können sein.
+        /// Prüft, ob eine Datei ein nicht unterstütztes Format ist.
         /// </summary>
-        /// <param name="filePath">Der Dateipfad.</param>
+        /// <param name="file">Die Datei.</param>
         /// <returns>True wenn die Datei nicht unterstützt wird, sonst false.</returns>
-        public bool IsUnsupportedFile(string filePath)
+        public bool IsUnsupportedFile(FileInput file)
         {
-            return UnsupportedExtensions.Contains(Path.GetExtension(filePath).ToLowerInvariant());
+            return UnsupportedExtensions.Contains(file.File.Extension.ToLowerInvariant());
         }
 
         /// <summary>
@@ -75,40 +83,43 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <param name="cancellationToken">Token für Abbruch der Operation.</param>
         /// <returns><see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task MergeMediaAsync(
-            string mainVideo,
-            IEnumerable<string> additionalVideos,
-            IEnumerable<string> subtitles,
+            FileInput mainVideo,
+            IEnumerable<FileInput> additionalVideos,
+            IEnumerable<FileInput> subtitles,
             string targetPath,
             CancellationToken cancellationToken)
         {
             try
             {
-                ValidateInputFile(mainVideo);
-                var additionalFiles = additionalVideos.ToList();
-                var subtitleFiles = subtitles.ToList();
+                ValidateInputFile(mainVideo.File.FullName);
+                var skipAD = Plugin.Instance!.Configuration.SkipAudioDescription;
+                var additionalFiles = additionalVideos
+                    .Where(f => !skipAD || !f.IsAudioDescription)
+                    .ToList();
+
+                // Dedupliziere kleine Untertitel-Dateien basierend auf Hash
+                var subtitleFiles = subtitles
+                    .Where(f => !skipAD || !f.IsAudioDescription)
+                    .GroupBy(f => f.File.Length < SmallFileThreshold ? f.Hash : Guid.NewGuid().ToString())
+                    .Select(g => g.First())
+                    .ToList();
 
                 foreach (var file in additionalFiles.Concat(subtitleFiles))
                 {
-                    ValidateInputFile(file);
+                    ValidateInputFile(file.File.FullName);
                 }
 
-                // Erkenne Sprache des Hauptvideos
-                var mainLang = _languageService.GetLanguageFromFileName(mainVideo, _defaultCulture);
-                var args = FFMpegArguments.FromFileInput(mainVideo);
+                var args = FFMpegArguments.FromFileInput(mainVideo.File.FullName);
 
-                var selectedStream = new List<(string FilePath, Channel Channel)>();
-                // Füge zusätzliche Videos als Input hinzu
                 foreach (var file in additionalFiles)
                 {
-                    args.AddFileInput(file);
-                    selectedStream.Add((file, Channel.Audio));
+                    args.AddFileInput(file.File.FullName);
                 }
 
                 // Füge Untertitel hinzu
                 foreach (var file in subtitleFiles)
                 {
-                    args.AddFileInput(file);
-                    selectedStream.Add((file, Channel.Subtitle));
+                    args.AddFileInput(file.File.FullName);
                 }
 
                 await args.OutputToFile(targetPath, true, options =>
@@ -123,42 +134,55 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                         .SelectStream(0, 0, Channel.Audio);
                     // Setze die Hauptaudiospur
                     options
-                        .WithCustomArgument($"-metadata:s:a:0 language={mainLang}")
+                        .WithCustomArgument($"-metadata:s:a:0 language={mainVideo.Language.ThreeLetterISOLanguageName}")
                         .WithCustomArgument("-disposition:a:0 default");
 
                     // Füge zusätzliche Audiospuren hinzu
                     for (int i = 0; i < additionalFiles.Count; i++)
                     {
-                        var lang = _languageService.GetLanguageFromFileName(additionalFiles[i], _defaultCulture);
+                        var file = additionalFiles[i];
+
                         options
                             .SelectStream(0, i + 1, Channel.Audio)
-                            .WithCustomArgument($"-metadata:s:a:{i + 1} language={lang}")
-                            .WithCustomArgument($"-disposition:a:{i + 1} 0");
+                            .WithCustomArgument($"-metadata:s:a:{i + 1} language={file.Language.ThreeLetterISOLanguageName}");
+                        if (file.IsAudioDescription)
+                        {
+                            options.WithCustomArgument($"-metadata:s:a:{i + 1} title=\"Audio Description\"")
+                                .WithCustomArgument($"-metadata:s:a:{i + 1} handler_name=\"Audio Description\"")
+                                .WithCustomArgument($"-disposition:a:{i + 1} +visual_impaired");
+                        }
+                        else
+                        {
+                            options.WithCustomArgument($"-disposition:a:{i + 1} 0");
+                        }
                     }
 
                     // Füge Untertitel hinzu
                     for (int i = 0; i < subtitleFiles.Count; i++)
                     {
-                        var lang = _languageService.GetLanguageFromFileName(subtitleFiles[i], _defaultCulture);
                         var inputIndex = additionalFiles.Count + i + 1;
                         options
-                            .SelectStream(0, i + 1, Channel.Subtitle)
-                            .WithCustomArgument($"-metadata:s:s:{i} language={lang}")
+                            .SelectStream(0, inputIndex, Channel.Subtitle)
+                            .WithCustomArgument($"-metadata:s:s:{i} language={subtitleFiles[i].Language.ThreeLetterISOLanguageName}")
                             .WithCustomArgument($"-disposition:s:{i} 0");
+                        if (subtitleFiles[i].IsAudioDescription)
+                        {
+                            options.WithCustomArgument($"-metadata:s:s:{i} title=\"Audio Description\"");
+                        }
                     }
                 })
                 .ProcessAsynchronously().ConfigureAwait(false);
 
                 _logger.LogInformation(
                     "Medien erfolgreich zusammengeführt: {Main} + {Additional} Audiospuren + {Subs} Untertitel -> {Target}",
-                    mainVideo,
+                    mainVideo.File.Name,
                     additionalFiles.Count,
                     subtitleFiles.Count,
                     targetPath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Zusammenführen der Medien: {Source}", mainVideo);
+                _logger.LogError(ex, "Fehler beim Zusammenführen der Medien: {Source}", mainVideo.File.Name);
                 throw;
             }
         }

@@ -40,6 +40,11 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 _logger.LogDebug("Kulturen initialisiert: {Count}", _cachedCultures.Length);
             }
 
+            if (name.Contains("(OV)", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return new CultureInfo("und"); // Originalversion
+            }
+
             // Direkte Übereinstimmung prüfen
             var lang = _cachedCultures.FirstOrDefault(culture =>
                 culture.ThreeLetterISOLanguageName.Equals(name, StringComparison.OrdinalIgnoreCase) ||

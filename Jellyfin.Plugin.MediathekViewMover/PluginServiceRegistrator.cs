@@ -18,6 +18,7 @@ namespace Jellyfin.Plugin.MediathekViewMover
             serviceCollection.AddSingleton<LanguageService>();
             serviceCollection.AddSingleton<MediaConversionService>();
             serviceCollection.AddSingleton<TaskProcessorService>();
+            serviceCollection.AddSingleton<IAudioDescriptionService, AudioDescriptionService>();
         }
     }
 }

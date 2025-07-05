@@ -156,41 +156,24 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <returns>Der normalisierte Dateiname.</returns>
         public string NormalizeFileName(string fileName)
         {
-            var extension = Path.GetExtension(fileName);
             var baseName = Path.GetFileNameWithoutExtension(fileName);
 
-            // Regex-Pattern aus dem PowerShell-Skript übernommen
-            var pattern = @"(?:Folge_\d+)?[_\-\s]{0,2}(?<title>.+?)\((?<scode>S\d+[_\-\s\/]{0,3}E\d+)\)";
-            var match = Regex.Match(baseName, pattern);
+            // Entferne "Folge_X" am Anfang
+            baseName = Regex.Replace(baseName, @"^Folge_\d+[_\-\s]*", string.Empty);
 
-            if (match.Success)
-            {
-                var title = match.Groups["title"].Value.Trim(" -_,".ToCharArray());
-                var seasonCode = match.Groups["scode"].Value;
-                // Mehrfache Bindestriche, Unterstriche und Leerzeichen durch ein einzelnes Leerzeichen ersetzen
-                title = Regex.Replace(title, @"[-_,\s]+", " ");
-                return TrimUnwantedCharacters(title); // $"{seasonCode} - {title}{extension}";
-            }
+            // Entferne alle Staffel/Episode-Bezeichnungen in Klammern
+            baseName = Regex.Replace(baseName, @"\(?[Ss]\d{1,3}[_\-\s]*[Ee]\d{1,3}\)?", string.Empty);
 
-            // Fallback für alternative Formate
-            var fallbackPattern = @"(?:\()?(?<scode>S\d+[_\-\s\/]{0,3}E\d+)(?:\))?";
-            match = Regex.Match(baseName, fallbackPattern);
-            if (match.Success)
-            {
-                var seasonCode = match.Groups["scode"].Value;
-                var remainingTitle = baseName.Replace(match.Value, string.Empty, StringComparison.InvariantCultureIgnoreCase)
-                    .Trim(" -_,".ToCharArray());
-                remainingTitle = Regex.Replace(remainingTitle, @"[-_,\s]+", " ");
-                return TrimUnwantedCharacters(remainingTitle); // $"{seasonCode} - {remainingTitle}{extension}";
-            }
+            // Mehrfache Bindestriche, Unterstriche und Leerzeichen durch ein einzelnes Leerzeichen ersetzen
+            baseName = Regex.Replace(baseName, @"[-_,\s]+", " ");
 
-            return TrimUnwantedCharacters(fileName);
+            return TrimUnwantedCharacters(baseName);
         }
 
         private string TrimUnwantedCharacters(string input)
         {
             // Entfernt unerwünschte Zeichen am Anfang und Ende des Strings
-            return input.Trim(" -_,:;()[]{}&".ToCharArray());
+            return input.Trim(" -_,:;()[]{}&!.".ToCharArray());
         }
 
         /// <summary>

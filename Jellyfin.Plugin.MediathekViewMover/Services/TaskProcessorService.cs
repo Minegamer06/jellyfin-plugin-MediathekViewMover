@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,11 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private readonly ILogger<TaskProcessorService> _logger;
         private readonly MediaConversionService _mediaConverter;
         private readonly IFileInfoService _fileInfoService;
+        private readonly LanguageService _languageService;
+        private readonly IAudioDescriptionService _audioDescriptionService;
         private readonly FFOptions _ffOptions;
+        private readonly string _tempDirectory;
+        private readonly CultureInfo _defaultCulture;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskProcessorService"/> class.
@@ -29,23 +34,32 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <param name="logger">Der Logger für den Service.</param>
         /// <param name="mediaConverter">Service für Medienkonvertierung.</param>
         /// <param name="fileInfoService">Service für Dateioperationen.</param>
+        /// <param name="languageService">Service für Spracherkennung.</param>
+        /// <param name="audioDescriptionService">Service für Audiodeskription.</param>
         /// <param name="configPaths">Server Configs Paths.</param>
         /// <param name="mediaEncoder">Media Encoder.</param>
         public TaskProcessorService(
             ILogger<TaskProcessorService> logger,
             MediaConversionService mediaConverter,
             IFileInfoService fileInfoService,
+            LanguageService languageService,
+            IAudioDescriptionService audioDescriptionService,
             IServerApplicationPaths configPaths,
             IMediaEncoder mediaEncoder)
         {
             _logger = logger;
             _mediaConverter = mediaConverter;
             _fileInfoService = fileInfoService;
+            _languageService = languageService;
+            _audioDescriptionService = audioDescriptionService;
+            _defaultCulture = CultureInfo.GetCultureInfo("de");
             _ffOptions = new FFOptions();
-            string tempDir = configPaths.TempDirectory;
-            _ffOptions.TemporaryFilesFolder = Path.Combine(tempDir, "MediathekViewMover");
-            string ffmpegPath = mediaEncoder.EncoderPath;
-            _logger.LogInformation("FFmpeg Pfad: {Path}", ffmpegPath);
+            _tempDirectory = Path.Combine(configPaths.TempDirectory, "MediathekViewMover");
+            _ffOptions.TemporaryFilesFolder = _tempDirectory;
+            if (!string.IsNullOrEmpty(mediaEncoder.EncoderPath))
+            {
+                _ffOptions.BinaryFolder = mediaEncoder.EncoderPath;
+            }
         }
 
         /// <summary>
@@ -53,8 +67,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// </summary>
         /// <param name="task">Der zu verarbeitende Task.</param>
         /// <param name="cancellationToken">Token für Abbruch der Operation.</param>
+        /// <param name="progress">Progress Reporter.</param>
         /// <returns>Task für die asynchrone Operation.</returns>
-        public async Task ProcessTaskAsync(MoverTask task, CancellationToken cancellationToken)
+        public async Task ProcessTaskAsync(MoverTask task, CancellationToken cancellationToken, IProgress<double> progress)
         {
             try
             {
@@ -67,8 +82,13 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 }
 
                 var files = Directory.GetFiles(task.SourceShowFolder, "*.*", SearchOption.AllDirectories);
+                var episodeGroups = GroupFilesByEpisode(files).ToList();
+                var totalGroups = episodeGroups.Count;
+                var processedGroups = 0;
+                _fileInfoService.InitializeFileWatchers(files);
+                // Warte 10 Sekunden, um festzustellen ob Dateien gerade in verwendung sind
+                await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
 
-                var episodeGroups = GroupFilesByEpisode(files);
                 foreach (var group in episodeGroups)
                 {
                     var items = group.ToList();
@@ -79,19 +99,31 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
                     if (group.Key.Season == null || group.Key.Episode == null)
                     {
-                        _logger.LogWarning("Überspringe Dateien ohne erkennbare Staffel/Episode");
+                        _logger.LogInformation("Überspringe Dateien ohne erkennbare Staffel/Episode");
+                        processedGroups++;
+                        progress.Report((double)processedGroups / totalGroups * 100);
                         continue;
                     }
 
                     if (items.Count < task.MinCount)
                     {
-                        _logger.LogWarning("Folge hat zu wenige Versionen: S{Season:D2}E{Episode:D2} ({Count})", group.Key.Season, group.Key.Episode, items.Count);
+                        _logger.LogInformation("Folge hat zu wenige Versionen: S{Season:D2}E{Episode:D2} ({Count})", group.Key.Season, group.Key.Episode, items.Count);
                     }
 
                     var episodeSeason = (group.Key.Season.Value, group.Key.Episode.Value);
                     var seasonFolder = Path.Combine(task.TargetShowFolder, $"Staffel {group.Key.Season}");
-                    await ProcessEpisodeGroupAsync(episodeSeason, items, seasonFolder, cancellationToken)
-                        .ConfigureAwait(false);
+                    try
+                    {
+                        await ProcessEpisodeGroupAsync(episodeSeason, items, seasonFolder, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        throw;
+                    }
+
+                    processedGroups++;
+                    progress.Report((double)processedGroups / totalGroups * 100);
                 }
             }
             catch (UnauthorizedAccessException ex)
@@ -106,50 +138,36 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             }
         }
 
-        private IEnumerable<IGrouping<(int? Season, int? Episode), string>> GroupFilesByEpisode(IEnumerable<string> files)
+        private IEnumerable<IGrouping<(int? Season, int? Episode), FileInput>> GroupFilesByEpisode(IEnumerable<string> files)
         {
-            return files.GroupBy(file =>
-            {
-                string fileName = Path.GetFileName(file);
+            return files.Select(filePath =>
+                {
+                    var fileInfo = new FileInfo(filePath);
+                    var fileName = fileInfo.Name;
+                    var language = _languageService.GetLanguageFromText(fileName) ?? _defaultCulture;
+                    var isAudioDescription = _audioDescriptionService.IsAudioDescription(fileName);
 
-                var season = _fileInfoService.ExtractSeasonNumber(fileName);
-                var episode = _fileInfoService.ExtractEpisodeNumber(fileName);
-                return (Season: season, Episode: episode);
-            });
+                    return new FileInput { File = fileInfo, Language = language, IsAudioDescription = isAudioDescription };
+                })
+                .GroupBy(file =>
+                {
+                    var season = _fileInfoService.ExtractSeasonNumber(file.File.Name);
+                    var episode = _fileInfoService.ExtractEpisodeNumber(file.File.Name);
+                    return (Season: season, Episode: episode);
+                });
         }
 
         private async Task ProcessEpisodeGroupAsync(
             (int Season, int Episode) episodeInfo,
-            List<string> files,
+            List<FileInput> files,
             string targetFolder,
             CancellationToken cancellationToken)
         {
             try
             {
-                if (!Directory.Exists(targetFolder))
-                {
-                    Directory.CreateDirectory(targetFolder);
-                }
-
                 var ageThreshold = TimeSpan.FromMinutes(60);
-                _fileInfoService.InitializeFileWatchers(files);
 
-                if (HasDirtyFiles(files, ageThreshold))
-                {
-                    _logger.LogWarning("Dateien in der Gruppe S{Season:D2}E{Episode:D2} wurden geändert oder sind in Verwendung", episodeInfo.Season, episodeInfo.Episode);
-                    return;
-                }
-
-                // Warte 10 Sekunden, um festzustellen ob Dateien gerade in verwendung sind
-                await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogInformation("Verarbeitung abgebrochen für S{Season:D2}E{Episode:D2}", episodeInfo.Season, episodeInfo.Episode);
-                    return;
-                }
-
-                // Prüfe erneut, ob Dateien in der Gruppe geändert wurden oder in Verwendung sind
-                if (HasDirtyFiles(files, ageThreshold))
+                if (HasDirtyFiles(files.Select(f => f.File.FullName), ageThreshold))
                 {
                     _logger.LogWarning("Dateien in der Gruppe S{Season:D2}E{Episode:D2} wurden geändert oder sind in Verwendung", episodeInfo.Season, episodeInfo.Episode);
                     return;
@@ -157,16 +175,12 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
                 // Gruppiere Dateien nach Typ
                 var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f)).ToList();
-
                 var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).ToList();
-
-                var unsupportedFiles = files
-                    .Where(f => _mediaConverter.IsUnsupportedFile(f))
-                    .ToList();
+                var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).ToList();
 
                 if (videoFiles.Count == 0)
                 {
-                    _logger.LogWarning("Keine Videodateien in der Gruppe S{Season:D2}E{Episode:D2} gefunden", episodeInfo.Season, episodeInfo.Episode);
+                    _logger.LogInformation("Keine Videodateien in der Gruppe S{Season:D2}E{Episode:D2} gefunden", episodeInfo.Season, episodeInfo.Episode);
                     return;
                 }
 
@@ -175,18 +189,74 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 var additionalVideos = videoFiles.Skip(1);
 
                 // Erstelle den Zieldateipfad
-                var targetFileName = $"S{episodeInfo.Season:D2}E{episodeInfo.Episode:D2} - {_fileInfoService.NormalizeFileName(mainVideo)}.mkv";
+                var tempPath = new FileInfo(Path.Combine(_tempDirectory, $"{Guid.NewGuid()}.mkv"));
+                var targetFileName = $"S{episodeInfo.Season:D2}E{episodeInfo.Episode:D2} - {_fileInfoService.NormalizeFileName(mainVideo.File.Name)}.mkv";
                 var targetPath = Path.Combine(targetFolder, targetFileName);
 
-                // Führe die Videos zusammen
-                await _mediaConverter.MergeMediaAsync(
-                    mainVideo,
-                    additionalVideos,
-                    subtitleFiles,
-                    targetPath,
-                    cancellationToken).ConfigureAwait(false);
+                if (!Directory.Exists(_tempDirectory))
+                {
+                    Directory.CreateDirectory(_tempDirectory);
+                }
 
-                _logger.LogInformation("Episode S{Season:D2}E{Episode:D2} erfolgreich verarbeitet", episodeInfo.Season, episodeInfo.Episode);
+                if (File.Exists(targetPath))
+                {
+                    _logger.LogInformation("Zieldatei {Target} existiert bereits. Überspringe Verarbeitung.", targetPath);
+                    return;
+                }
+
+                try
+                {
+                    await _mediaConverter.MergeMediaAsync(
+                        mainVideo,
+                        additionalVideos,
+                        subtitleFiles,
+                        tempPath.FullName,
+                        cancellationToken).ConfigureAwait(false);
+
+                    tempPath.Refresh();
+                    if (tempPath is { Exists: true, Length: > 1000 * 1000 * 100 }) // Mindestens 100 MB
+                    {
+                        if (!Directory.Exists(targetFolder))
+                        {
+                            Directory.CreateDirectory(targetFolder);
+                        }
+
+                        File.Move(tempPath.FullName, targetPath);
+                        if (Plugin.Instance!.Configuration.DeleteSource)
+                        {
+                            foreach (var file in videoFiles.Concat(subtitleFiles).Concat(unsupportedFiles))
+                            {
+                                try
+                                {
+                                    file.File.Delete();
+                                    _logger.LogTrace("Datei {File} erfolgreich gelöscht", file.File.FullName);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogWarning(ex, "Fehler beim Löschen der Datei {File}", file.File.FullName);
+                                }
+                            }
+                        }
+
+                        _logger.LogTrace("Episode S{Season:D2}E{Episode:D2} erfolgreich verschoben nach {Target}", episodeInfo.Season, episodeInfo.Episode, targetPath);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Erstellte Datei S{Season:D2}E{Episode:D2} ist zu klein oder leer: {Path}", episodeInfo.Season, episodeInfo.Episode, tempPath.FullName);
+                        return;
+                    }
+                }
+                finally
+                {
+                    tempPath.Refresh();
+                    // Temp-Datei löschen, auch bei Fehlern
+                    if (tempPath.Exists)
+                    {
+                        tempPath.Delete();
+                    }
+                }
+
+                _logger.LogTrace("Episode S{Season:D2}E{Episode:D2} erfolgreich verarbeitet", episodeInfo.Season, episodeInfo.Episode);
             }
             catch (Exception ex)
             {

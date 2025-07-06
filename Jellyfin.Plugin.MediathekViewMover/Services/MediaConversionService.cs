@@ -10,6 +10,8 @@ using FFMpegCore.Arguments;
 using FFMpegCore.Enums;
 using Jellyfin.Plugin.MediathekViewMover.Models;
 using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
+using MediaBrowser.Controller;
+using MediaBrowser.Controller.MediaEncoding;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Services
@@ -23,6 +25,8 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private readonly ILogger<MediaConversionService> _logger;
         private readonly LanguageService _languageService;
         private readonly IAudioDescriptionService _audioDescriptionService;
+        private readonly IMediaEncoder _mediaEncoder;
+        private readonly IServerApplicationPaths _configPaths;
         private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov"];
         private static readonly string[] SubtitleExtensions = [".srt", ".ass", ".ssa"];
         private static readonly string[] UnsupportedExtensions = [".ttml", ".jpg"];
@@ -33,14 +37,20 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <param name="logger">Der Logger für den Service.</param>
         /// <param name="languageService">Der Service für Spracherkennung.</param>
         /// <param name="audioDescriptionService">Der Service für Audiodeskription.</param>
+        /// <param name="mediaEncoder">Der Encoding Pfad Info.</param>
+        /// <param name="configPaths">All the Paths Jellyfin uses.</param>
         public MediaConversionService(
             ILogger<MediaConversionService> logger,
             LanguageService languageService,
-            IAudioDescriptionService audioDescriptionService)
+            IAudioDescriptionService audioDescriptionService,
+            IMediaEncoder mediaEncoder,
+            IServerApplicationPaths configPaths)
         {
             _logger = logger;
             _languageService = languageService;
             _audioDescriptionService = audioDescriptionService;
+            _mediaEncoder = mediaEncoder;
+            _configPaths = configPaths;
         }
 
         /// <summary>
@@ -91,6 +101,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         {
             try
             {
+                _logger.LogInformation("FFmpeg-Path aus MediaEncoder: {Path}", _mediaEncoder.EncoderPath ?? "<leer>");
+                ArgumentException.ThrowIfNullOrEmpty(_mediaEncoder.EncoderPath);
+                FFOptions ffOptions = new FFOptions() { TemporaryFilesFolder = Path.Combine(_configPaths.TempDirectory, "MediathekViewMover"), BinaryFolder = new FileInfo(_mediaEncoder.EncoderPath)?.DirectoryName ?? string.Empty };
                 ValidateInputFile(mainVideo.File.FullName);
                 var skipAD = Plugin.Instance!.Configuration.SkipAudioDescription;
                 var additionalFiles = additionalVideos
@@ -171,7 +184,8 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                         }
                     }
                 })
-                .ProcessAsynchronously().ConfigureAwait(false);
+                .ProcessAsynchronously(true, ffOptions)
+                .ConfigureAwait(false);
 
                 _logger.LogInformation(
                     "Medien erfolgreich zusammengeführt: {Main} + {Additional} Audiospuren + {Subs} Untertitel -> {Target}",

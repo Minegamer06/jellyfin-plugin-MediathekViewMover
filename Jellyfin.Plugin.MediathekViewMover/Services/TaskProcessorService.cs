@@ -24,7 +24,6 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private readonly IFileInfoService _fileInfoService;
         private readonly LanguageService _languageService;
         private readonly IAudioDescriptionService _audioDescriptionService;
-        private readonly FFOptions _ffOptions;
         private readonly string _tempDirectory;
         private readonly CultureInfo _defaultCulture;
 
@@ -53,14 +52,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             _languageService = languageService;
             _audioDescriptionService = audioDescriptionService;
             _defaultCulture = CultureInfo.GetCultureInfo("de");
-            _ffOptions = new FFOptions();
             _tempDirectory = Path.Combine(configPaths.TempDirectory, "MediathekViewMover");
-            _ffOptions.TemporaryFilesFolder = _tempDirectory;
-            _logger.LogInformation("FFmpeg-Path aus MediaEncoder: {Path}", mediaEncoder.EncoderPath ?? "<leer>");
-            if (!string.IsNullOrEmpty(mediaEncoder.EncoderPath))
-            {
-                _ffOptions.BinaryFolder = new FileInfo(mediaEncoder.EncoderPath)?.DirectoryName ?? string.Empty;
-            }
         }
 
         /// <summary>

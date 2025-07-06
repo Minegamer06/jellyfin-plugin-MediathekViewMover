@@ -1,7 +1,7 @@
 ---
 name: "MediathekViewMover"
 guid: "18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A"
-version: "0.1.0.0"
+version: "0.0.0.1"
 targetAbi: "10.10.7.0"
 framework: "net8.0"
 overview: "Short description about your plugin"

@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <!-- FFMpegCore und seine Dependencies werden mit dem Plugin ausgeliefert -->
-    <PackageReference Include="FFMpegCore" Version="5.0.0" PrivateAssets="All" />
+    <PackageReference Include="FFMpegCore" Version="5.0.0"/>
     
     <!-- Jellyfin-Pakete werden nicht mit ausgeliefert, da sie vom Server bereitgestellt werden -->
     <PackageReference Include="Jellyfin.Controller" Version="10.9.11" Private="false" ExcludeAssets="runtime;native" />

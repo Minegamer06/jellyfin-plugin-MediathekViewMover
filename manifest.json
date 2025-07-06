@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.0.1.1",
+        "changelog": " - f983a0a FFMpeg Pfad sollte richtig extrahiert werden\n - fcb0cbc Update manifest.json\n - 9022163 Update build.yaml and manifest.json for release version 0.0.1.0\n - cb72731 FFMpegCore muss mit Kopiert werden\n - d2e7daf Erster Testrelease",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover/releases/download/v0.0.1.1/mediathekviewmover_0.0.1.1.zip",
+        "checksum": "7f7c5d2e820dd8f78f5642c9567524f7",
+        "timestamp": "2025-07-06T13:14:11Z"
+      },
+      {
         "version": "0.0.1.0",
         "changelog": " - cb72731 FFMpegCore muss mit Kopiert werden\n - d2e7daf Erster Testrelease",
         "targetAbi": "10.10.7.0",

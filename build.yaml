@@ -15,6 +15,12 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  FFMpeg Pfad sollte richtig extrahiert werden
+
+  Update manifest.json
+
+  Update build.yaml and manifest.json for release version 0.0.1.0
+
   FFMpegCore muss mit Kopiert werden
 
   Erster Testrelease

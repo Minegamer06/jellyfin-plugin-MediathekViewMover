@@ -56,6 +56,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             _ffOptions = new FFOptions();
             _tempDirectory = Path.Combine(configPaths.TempDirectory, "MediathekViewMover");
             _ffOptions.TemporaryFilesFolder = _tempDirectory;
+            _logger.LogInformation("FFmpeg-Path aus MediaEncoder: {Path}", mediaEncoder.EncoderPath ?? "<leer>");
             if (!string.IsNullOrEmpty(mediaEncoder.EncoderPath))
             {
                 _ffOptions.BinaryFolder = new FileInfo(mediaEncoder.EncoderPath)?.DirectoryName ?? string.Empty;

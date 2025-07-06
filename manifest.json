@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.0.1.2",
+        "changelog": " - dc43c29 Update build.yaml\n - d5207e7 Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover\n - 3c85e19 Debuging FFMPEG Pfad Probleme\n - 1160702 Update build.yaml and manifest.json for release version 0.0.1.1\n - f983a0a FFMpeg Pfad sollte richtig extrahiert werden\n - fcb0cbc Update manifest.json",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover/releases/download/v0.0.1.2/mediathekviewmover_0.0.1.2.zip",
+        "checksum": "69f2ec4a73d777ddfbb777899d0a86d1",
+        "timestamp": "2025-07-06T13:24:39Z"
+      },
+      {
         "version": "0.0.1.1",
         "changelog": " - f983a0a FFMpeg Pfad sollte richtig extrahiert werden\n - fcb0cbc Update manifest.json\n - 9022163 Update build.yaml and manifest.json for release version 0.0.1.0\n - cb72731 FFMpegCore muss mit Kopiert werden\n - d2e7daf Erster Testrelease",
         "targetAbi": "10.10.7.0",

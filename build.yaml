@@ -15,12 +15,14 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Update build.yaml
+
+  Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover
+
+  Debuging FFMPEG Pfad Probleme
+
+  Update build.yaml and manifest.json for release version 0.0.1.1
+
   FFMpeg Pfad sollte richtig extrahiert werden
 
   Update manifest.json
-
-  Update build.yaml and manifest.json for release version 0.0.1.0
-
-  FFMpegCore muss mit Kopiert werden
-
-  Erster Testrelease

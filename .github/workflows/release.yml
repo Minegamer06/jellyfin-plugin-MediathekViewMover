@@ -1,0 +1,146 @@
+# Inspiered by https://github.com/TheXaman/jellyfin-plugin-languageTags/blob/main/.github/workflows/release.yml
+name: Release
+
+on:
+  push:
+    paths:
+      - 'build.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ensures full history for changelog generation
+
+      - name: Setup yq
+        uses: mikefarah/yq@v4
+
+      - name: Get version from build.yaml
+        id: get_version
+        run: echo "VERSION=$(yq e '.version' build.yaml)" >> $GITHUB_ENV
+
+      - name: Check if version is different from latest tag
+        id: check_version
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          latest_version=${latest_tag#v}
+          echo "Latest version from tag: $latest_version"
+          echo "Version from build.yaml: ${{ env.VERSION }}"
+          if [ "${{ env.VERSION }}" = "$latest_version" ]; then
+            echo "Version in build.yaml has not changed. No new release needed."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version in build.yaml has changed. Proceeding with release."
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate Changelog
+        if: steps.check_version.outputs.changed == 'true'
+        uses: Bullrich/generate-release-changelog@master
+        id: changelog
+        env:
+          REPO: ${{ github.repository }}
+          from: "latest"
+          to: "HEAD"
+
+      - name: Format Changelog for build.yaml
+        if: steps.check_version.outputs.changed == 'true'
+        id: format_changelog_build
+        run: |
+          # This format is for the multi-line string in YAML
+          formatted_changelog=$(echo "${{ steps.changelog.outputs.changelog }}" | sed -E 's/ - [a-f0-9]{7} //')
+          echo "FORMATTED_CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$formatted_changelog" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Update changelog in `build.yaml`
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          yq e -i '.changelog = strenv(FORMATTED_CHANGELOG)' build.yaml
+
+      - name: Print build.yaml
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          echo "Updated build.yaml:"
+          cat build.yaml
+
+      - name: Setup .NET
+        if: steps.check_version.outputs.changed == 'true'
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build Jellyfin Plugin
+        if: steps.check_version.outputs.changed == 'true'
+        uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
+        id: jprm
+        with:
+          dotnet-target: net8.0
+
+      - name: Generate Release Checksums
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          hash="$(md5sum ${{ steps.jprm.outputs.artifact }} | cut -d ' ' -f 1)"
+          echo "$hash $(basename ${{ steps.jprm.outputs.artifact }})" >> checksums.md5
+          echo "CHECKSUM=$hash" >> $GITHUB_ENV
+          echo "ARTIFACT_FILENAME=$(basename ${{ steps.jprm.outputs.artifact }})" >> $GITHUB_ENV
+
+      - name: Update `manifest.json`
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          sourceUrl="https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/${{ env.ARTIFACT_FILENAME }}"
+          # Read existing versions, add the new one, and keep only the last 10
+          jq --arg version "${{ env.VERSION }}" \
+             --arg changelog "${{ steps.changelog.outputs.changelog }}" \
+             --arg targetAbi "$(yq e '.targetAbi' build.yaml)" \
+             --arg sourceUrl "$sourceUrl" \
+             --arg checksum "${{ env.CHECKSUM }}" \
+             --arg timestamp "$timestamp" \
+             '.[0].versions = ([{
+               version: $version,
+               changelog: $changelog,
+               targetAbi: $targetAbi,
+               sourceUrl: $sourceUrl,
+               checksum: $checksum,
+               timestamp: $timestamp
+             }] + .[0].versions) | .[0].versions = .[0].versions[:10]' \
+             manifest.json > manifest.tmp.json && mv manifest.tmp.json manifest.json
+
+      - name: Commit Updated Files
+        if: steps.check_version.outputs.changed == 'true'
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add build.yaml manifest.json
+          git commit -m "Update build.yaml and manifest.json for release version ${{ env.VERSION }}"
+          git push
+
+      - name: Create Tag
+        if: steps.check_version.outputs.changed == 'true'
+        env:
+          VERSION: ${{ env.VERSION }}
+        run: |
+          echo "Creating tag v${VERSION}"
+          git tag -a "v${VERSION}" -m "Release version v${VERSION}"
+          git push origin "v${VERSION}"
+
+      - name: Create GitHub Release
+        if: steps.check_version.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v1
+        env:
+          VERSION: ${{ env.VERSION }}
+        with:
+          tag_name: "v${{ env.VERSION }}"
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            checksums.md5
+            ${{ steps.jprm.outputs.artifact }}

@@ -58,7 +58,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             _ffOptions.TemporaryFilesFolder = _tempDirectory;
             if (!string.IsNullOrEmpty(mediaEncoder.EncoderPath))
             {
-                _ffOptions.BinaryFolder = mediaEncoder.EncoderPath;
+                _ffOptions.BinaryFolder = new FileInfo(mediaEncoder.EncoderPath)?.DirectoryName ?? string.Empty;
             }
         }
 

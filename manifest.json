@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.0.0.1",
+        "changelog": " - 0537594 Anpassung an changelog gerierung rückgängig gemacht\n - 1f6927a Changes anders Berechnen, global.json sollte .NET 8 nutzen\n - bff662b Update build.yaml\n - 5b67e88 Anpassungen an Build.yml\n - 49da64c AudioDescription wird erkannt, und kann überspurngen werden. Der Fortschritt wird angezeigt. Doppelte Untertitle werden erkannt. Unnötiges zeug aus der Config entfernt.\n - 5e0d8e1 CSS für die Configuration verbessert\n - bcde69f Es sollte als mover Task gespeichert werden, das Frontend für die Configuration hat nocht FolderMapping genutzt\n - 348cadf Copy wird manuell gesetzt, da ich eine Ältere Packet Version nutze, Language nutzte DE als Fallback, Das Plugin wird über instanze zugegriffen, nicht über DI,\n - bad0ed8 Verschieden Services erstellt für Datei, Conversion, Task Process, LanguageService\n - e98bc81 Config Page sieht schöner aus\n - 9b04a61 Namespace angepasst\n - 934428b Initial commit",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover/releases/download/v0.0.0.1/mediathekviewmover_0.0.0.1.zip",
+        "checksum": "3b2f3ece0704cde67fd6e52d1ccafc44",
+        "timestamp": "2025-07-06T11:32:55Z"
+      },
+      {
         "version": "0.1.0.0",
         "changelog": "Initial release",
         "targetAbi": "10.10.7.0",

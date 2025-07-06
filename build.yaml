@@ -6,11 +6,33 @@ targetAbi: "10.10.7.0"
 framework: "net8.0"
 overview: "Short description about your plugin"
 description: >
-  This is a longer description that can span more than one
-  line and include details about your plugin.
+  This is a longer description that can span more than one line and include details about your plugin.
+
 category: "General"
 owner: "Minegamer06"
 artifacts:
-- "Jellyfin.Plugin.MediathekViewMover.dll"
-changelog: >
-  changelog
+  - "Jellyfin.Plugin.MediathekViewMover.dll"
+changelog: >-
+  Anpassung an changelog gerierung rückgängig gemacht
+
+  Changes anders Berechnen, global.json sollte .NET 8 nutzen
+
+  Update build.yaml
+
+  Anpassungen an Build.yml
+
+  AudioDescription wird erkannt, und kann überspurngen werden. Der Fortschritt wird angezeigt. Doppelte Untertitle werden erkannt. Unnötiges zeug aus der Config entfernt.
+
+  CSS für die Configuration verbessert
+
+  Es sollte als mover Task gespeichert werden, das Frontend für die Configuration hat nocht FolderMapping genutzt
+
+  Copy wird manuell gesetzt, da ich eine Ältere Packet Version nutze, Language nutzte DE als Fallback, Das Plugin wird über instanze zugegriffen, nicht über DI,
+
+  Verschieden Services erstellt für Datei, Conversion, Task Process, LanguageService
+
+  Config Page sieht schöner aus
+
+  Namespace angepasst
+
+  Initial commit

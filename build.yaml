@@ -6,36 +6,15 @@ targetAbi: "10.10.7.0"
 framework: "net8.0"
 overview: "Ordnet MediathekView-Downloads sauber für Jellyfin ein."
 description: >
-  MediathekViewMover ist ein Plugin für Jellyfin, das heruntergeladene Inhalte aus MediathekView automatisch in ein sauberes und einheitliches Format bringt.
-  Es benennt Serienepisoden und Filme korrekt um, erkennt und gruppiert Untertitel sowie alternative Audiospuren, und legt alles ordentlich im Jellyfin-Verzeichnis ab.
-  So wird dein Medienarchiv nicht nur aufgeräumter, sondern auch kompatibler und übersichtlicher – ganz ohne manuelles Nachbearbeiten.
+  MediathekViewMover ist ein Plugin für Jellyfin, das heruntergeladene Inhalte aus MediathekView automatisch in ein sauberes und einheitliches Format bringt. Es benennt Serienepisoden und Filme korrekt um, erkennt und gruppiert Untertitel sowie alternative Audiospuren, und legt alles ordentlich im Jellyfin-Verzeichnis ab. So wird dein Medienarchiv nicht nur aufgeräumter, sondern auch kompatibler und übersichtlicher – ganz ohne manuelles Nachbearbeiten.
+
 category: "General"
 owner: "Minegamer06"
 artifacts:
   - "Jellyfin.Plugin.MediathekViewMover.dll"
   - "FFMpegCore.dll"
   - "Instances.dll"
-changelog: >
-  Anpassung an changelog gerierung rückgängig gemacht
+changelog: >-
+  FFMpegCore muss mit Kopiert werden
 
-  Changes anders Berechnen, global.json sollte .NET 8 nutzen
-
-  Update build.yaml
-
-  Anpassungen an Build.yml
-
-  AudioDescription wird erkannt, und kann überspurngen werden. Der Fortschritt wird angezeigt. Doppelte Untertitle werden erkannt. Unnötiges zeug aus der Config entfernt.
-
-  CSS für die Configuration verbessert
-
-  Es sollte als mover Task gespeichert werden, das Frontend für die Configuration hat nocht FolderMapping genutzt
-
-  Copy wird manuell gesetzt, da ich eine Ältere Packet Version nutze, Language nutzte DE als Fallback, Das Plugin wird über instanze zugegriffen, nicht über DI,
-
-  Verschieden Services erstellt für Datei, Conversion, Task Process, LanguageService
-
-  Config Page sieht schöner aus
-
-  Namespace angepasst
-
-  Initial commit
+  Erster Testrelease

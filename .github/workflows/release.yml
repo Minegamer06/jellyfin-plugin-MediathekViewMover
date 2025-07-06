@@ -44,19 +44,19 @@ jobs:
 
       - name: Generate Changelog
         if: steps.check_version.outputs.changed == 'true'
+        uses: Bullrich/generate-release-changelog@master
         id: changelog
-        run: |
-          changelog=$(npx generate-release-changelog --from latest --to HEAD)
-          echo "changelog<<EOF" >> $GITHUB_ENV
-          echo "$changelog" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        env:
+          REPO: ${{ github.repository }}
+          from: "latest"
+          to: "HEAD"
 
       - name: Format Changelog for build.yaml
         if: steps.check_version.outputs.changed == 'true'
         id: format_changelog_build
         run: |
           # This format is for the multi-line string in YAML
-          formatted_changelog=$(echo "$changelog" | sed -E 's/ - [a-f0-9]{7} //')
+          formatted_changelog=$(echo "${{ steps.changelog.outputs.changelog }}" | sed -E 's/ - [a-f0-9]{7} //')
           echo "FORMATTED_CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$formatted_changelog" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV

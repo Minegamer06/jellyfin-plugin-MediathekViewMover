@@ -15,14 +15,12 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Pfade für FFMpegCore werden erst später in der Task aufgelöst. Eingestelle Optionen werden jezt auch gesetzt.
+
+  Update build.yaml and manifest.json for release version 0.0.1.2
+
   Update build.yaml
 
   Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover
 
   Debuging FFMPEG Pfad Probleme
-
-  Update build.yaml and manifest.json for release version 0.0.1.1
-
-  FFMpeg Pfad sollte richtig extrahiert werden
-
-  Update manifest.json

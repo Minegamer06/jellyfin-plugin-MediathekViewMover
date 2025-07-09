@@ -167,9 +167,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 }
 
                 // Gruppiere Dateien nach Typ
-                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f)).ToList();
-                var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).ToList();
-                var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).ToList();
+                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
+                var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
+                var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
 
                 if (videoFiles.Count == 0)
                 {

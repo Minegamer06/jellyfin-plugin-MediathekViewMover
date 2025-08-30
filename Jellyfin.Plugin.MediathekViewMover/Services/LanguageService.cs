@@ -42,6 +42,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
             if (name.Contains("(OV)", StringComparison.InvariantCultureIgnoreCase))
             {
+                _logger.LogDebug("Datei {Name} enthält die Originalsprache", name);
                 return new CultureInfo("und"); // Originalversion
             }
 
@@ -55,6 +56,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
             if (lang is not null)
             {
+                _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, es gab eine direkte Übereinstimmung", name, lang.DisplayName);
                 return lang;
             }
 
@@ -71,11 +73,12 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
                 if (lang is not null)
                 {
+                    _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, die Sprache war enthalten in einem Teilstring", name, lang.DisplayName);
                     return lang;
                 }
             }
 
-            _logger.LogDebug("Keine Sprache gefunden für: {Name}", name);
+            _logger.LogInformation("Keine Sprache gefunden für: {Name}", name);
             return null;
         }
 

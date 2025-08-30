@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.MediathekViewMover.Services
@@ -33,53 +34,64 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         /// <returns>Die erkannte Kultur oder null.</returns>
         public CultureInfo? GetLanguageFromText(string name, bool secure = true)
         {
-            _logger.LogTrace("Suche nach Sprache in: {Name}", name);
-            if (_cachedCultures is null || _cachedCultures.Length == 0)
+            var oldCulture = Thread.CurrentThread.CurrentUICulture;
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("de-DE"); // We use German so we can access the German Language Names
+            try
             {
-                _cachedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
-                _logger.LogDebug("Kulturen initialisiert: {Count}", _cachedCultures.Length);
-            }
+                _logger.LogTrace("Suche nach Sprache in: {Name}", name);
+                if (_cachedCultures is null || _cachedCultures.Length == 0)
+                {
+                    _cachedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+                    _logger.LogDebug("Kulturen initialisiert: {Count}", _cachedCultures.Length);
+                }
 
-            if (name.Contains("(OV)", StringComparison.InvariantCultureIgnoreCase))
-            {
-                _logger.LogDebug("Datei {Name} enthält die Originalsprache", name);
-                return new CultureInfo("und"); // Originalversion
-            }
+                if (name.Contains("(OV)", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _logger.LogDebug("Datei {Name} enthält die Originalsprache", name);
+                    return new CultureInfo("und"); // Originalversion
+                }
 
-            // Direkte Übereinstimmung prüfen
-            var lang = _cachedCultures.FirstOrDefault(culture =>
-                culture.ThreeLetterISOLanguageName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                culture.TwoLetterISOLanguageName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                culture.EnglishName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                culture.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
-                culture.NativeName.Equals(name, StringComparison.OrdinalIgnoreCase));
-
-            if (lang is not null)
-            {
-                _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, es gab eine direkte Übereinstimmung", name, lang.DisplayName);
-                return lang;
-            }
-
-            // Suche in extrahierten Sprachstrings
-            var languageStrings = ExtractLanguageStrings(name, secure);
-            foreach (var word in languageStrings)
-            {
-                lang = _cachedCultures.FirstOrDefault(culture =>
-                    culture.ThreeLetterISOLanguageName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
-                    culture.TwoLetterISOLanguageName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
-                    culture.EnglishName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
-                    culture.Name.Equals(word, StringComparison.OrdinalIgnoreCase) ||
-                    culture.NativeName.Equals(word, StringComparison.OrdinalIgnoreCase));
+                // Direkte Übereinstimmung prüfen
+                var lang = _cachedCultures.FirstOrDefault(culture =>
+                    culture.ThreeLetterISOLanguageName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    culture.TwoLetterISOLanguageName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    culture.EnglishName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    culture.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    culture.NativeName.Equals(name, StringComparison.OrdinalIgnoreCase) ||
+                    culture.DisplayName.Equals(name, StringComparison.OrdinalIgnoreCase));
 
                 if (lang is not null)
                 {
-                    _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, die Sprache war enthalten in einem Teilstring", name, lang.DisplayName);
+                    _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, es gab eine direkte Übereinstimmung", name, lang.DisplayName);
                     return lang;
                 }
-            }
 
-            _logger.LogInformation("Keine Sprache gefunden für: {Name}", name);
-            return null;
+                // Suche in extrahierten Sprachstrings
+                var languageStrings = ExtractLanguageStrings(name, secure);
+                foreach (var word in languageStrings)
+                {
+                    lang = _cachedCultures.FirstOrDefault(culture =>
+                        culture.ThreeLetterISOLanguageName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
+                        culture.TwoLetterISOLanguageName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
+                        culture.EnglishName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
+                        culture.Name.Equals(word, StringComparison.OrdinalIgnoreCase) ||
+                        culture.NativeName.Equals(word, StringComparison.OrdinalIgnoreCase) ||
+                        culture.DisplayName.Equals(word, StringComparison.OrdinalIgnoreCase));
+
+                    if (lang is not null)
+                    {
+                        _logger.LogInformation("Die Sprache der Datei {FileName} ist {Language}, die Sprache war enthalten in einem Teilstring", name, lang.DisplayName);
+                        return lang;
+                    }
+                }
+
+                _logger.LogInformation("Keine Sprache gefunden für: {Name}", name);
+                return null;
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentUICulture = oldCulture;
+            }
         }
 
         private List<string> ExtractLanguageStrings(string name, bool secure = true)
@@ -154,7 +166,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             fallBack ??= CultureInfo.GetCultureInfo("und");
             var fileName = Path.GetFileNameWithoutExtension(filePath);
             var culture = GetLanguageFromText(fileName);
-            return culture?.ThreeLetterISOLanguageName ?? fallBack.ThreeLetterISOLanguageName;
+            return culture?.ThreeLetterISOLanguageName ?? (string.IsNullOrEmpty(fallBack.ThreeLetterISOLanguageName) ? "und" : fallBack.ThreeLetterISOLanguageName);
         }
     }
 }

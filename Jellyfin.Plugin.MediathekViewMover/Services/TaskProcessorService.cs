@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FFMpegCore;
 using Jellyfin.Plugin.MediathekViewMover.Models;
 using Jellyfin.Plugin.MediathekViewMover.Services.Interfaces;
 using MediaBrowser.Controller;
@@ -152,7 +151,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
         private async Task ProcessEpisodeGroupAsync(
             (int Season, int Episode) episodeInfo,
-            List<FileInput> files,
+            System.Collections.Generic.List<FileInput> files,
             string targetFolder,
             CancellationToken cancellationToken)
         {
@@ -166,8 +165,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                     return;
                 }
 
+                var skipAD = Plugin.Instance!.Configuration.SkipAudioDescription;
                 // Gruppiere Dateien nach Typ
-                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
+                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f) && (!skipAD || f.IsAudioDescription )).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
                 var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
                 var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
 

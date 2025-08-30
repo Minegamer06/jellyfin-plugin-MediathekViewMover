@@ -1,0 +1,80 @@
+name: Manually Test Release Workflow
+
+# Trigger: Manuell über die GitHub UI auf einem beliebigen Branch
+on:
+  workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Test version tag (e.g., v99.0.0-test)'
+        required: true
+        default: 'v99.0.0-test'
+
+jobs:
+  test-build-and-release:
+    name: Test Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Erforderlich für Commit/Push und das Erstellen von Releases
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Verwende den manuell eingegebenen Tag als Version
+      - name: Get Version from Input
+        id: get_version
+        run: echo "VERSION=${{ github.event.inputs.version_tag }}" | sed -e 's/^v//' >> $GITHUB_ENV
+
+      # Erstelle ein sicheres DRAFT-Release, um eine upload_url zu erhalten.
+      # Dieses Release ist nicht öffentlich sichtbar.
+      - name: Create Draft Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.version_tag }}
+          release_name: Test Release ${{ github.event.inputs.version_tag }}
+          body: "This is a test release for workflow validation."
+          draft: true
+          prerelease: true
+
+      # Schritt 1: Plugin bauen und als ZIP verpacken
+      - name: Build plugin zip
+        uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
+        id: build
+        with:
+          command: "plugin build"
+          project: "Jellyfin.Plugin.MediathekViewMover/Jellyfin.Plugin.MediathekViewMover.csproj"
+          version: ${{ env.VERSION }}
+          dotnet-target: net8.0
+          output-dir: "artifacts"
+
+      # Schritt 2: Manifest aktualisieren
+      - name: Update manifest
+        uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
+        with:
+          command: "repo add"
+          manifest-path: "manifest.json"
+          zip-path: ${{ steps.build.outputs.zip-path }}
+          repository-url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.inputs.version_tag }}"
+          changelog: ${{ steps.create_release.outputs.body }}
+
+      # Schritt 3: Aktualisierte manifest.json committen und pushen
+      - name: Commit and push manifest.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "TEST: Update manifest.json for version ${{ env.VERSION }}"
+          git push
+
+      # Schritt 4: ZIP-Datei als Asset zum DRAFT-Release hochladen
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.build.outputs.zip-path }}
+          asset_name: ${{ steps.build.outputs.zip-filename }}
+          asset_content_type: application/zip

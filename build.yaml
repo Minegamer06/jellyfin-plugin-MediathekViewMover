@@ -17,12 +17,18 @@ artifacts:
 changelog: >-
   Update build.yaml
 
+  Merge pull request #3 from Minegamer06/dev
+
+  Fixed Language Detection Issuse Addet Unit Test Projekt
+
+  Merge pull request #2 from Minegamer06/dev
+
+  Test Changes for new Release action
+
+  Update build.yaml and manifest.json for release version 0.0.1.5
+
+  Update build.yaml
+
   Merge pull request #1 from Minegamer06/dev
 
   Loggin bei Sprachauflösung erweitert
-
-  Update build.yaml and manifest.json for release version 0.0.1.4
-
-  Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover
-
-  AudioDescription sollte immer unten sein, ausderm kann es sonst bugs geben

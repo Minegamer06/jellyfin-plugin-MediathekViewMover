@@ -1,0 +1,67 @@
+name: Release Plugin
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Erforderlich, um Manifest-Änderungen zu pushen und Release-Assets hochzuladen
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get Version from Tag
+        id: get_version
+        run: echo "VERSION=${{ github.event.release.tag_name }}" | sed -e 's/^v//' >> $GITHUB_ENV
+
+      # Schritt 1: Plugin bauen und als ZIP verpacken
+      - name: Build plugin zip
+        uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
+        id: build
+        with:
+          command: "plugin build"
+          project: "Jellyfin.Plugin.MediathekViewMover/Jellyfin.Plugin.MediathekViewMover.csproj"
+          version: ${{ env.VERSION }}
+          dotnet-target: net8.0
+          output-dir: "artifacts"
+
+      # Schritt 2: Manifest aktualisieren
+      # Diese Action nimmt die lokale ZIP-Datei, berechnet die Checksumme und fügt
+      # einen neuen Eintrag in der manifest.json hinzu. Die Download-URL wird aus
+      # der repository-url und dem ZIP-Dateinamen konstruiert.
+      - name: Update manifest
+        uses: oddstr13/jellyfin-plugin-repository-manager@v0.5.0
+        with:
+          command: "repo add"
+          manifest-path: "manifest.json"
+          zip-path: ${{ steps.build.outputs.zip-path }}
+          repository-url: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}"
+          changelog: ${{ github.event.release.body }}
+
+      # Schritt 3: Aktualisierte manifest.json committen und pushen
+      - name: Commit and push manifest.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update manifest.json for version ${{ env.VERSION }}"
+            git push
+          fi
+
+      # Schritt 4: ZIP-Datei als Release-Asset hochladen
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.build.outputs.zip-path }}
+          asset_name: ${{ steps.build.outputs.zip-filename }}
+          asset_content_type: application/zip

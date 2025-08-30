@@ -15,6 +15,11 @@ namespace Jellyfin.Plugin.MediathekViewMover;
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
     /// <summary>
+    /// The plugin ID.
+    /// </summary>
+    public const string PluginId = "18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A";
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
     /// </summary>
     /// <param name="applicationPaths">Instance of the <see cref="IApplicationPaths"/> interface.</param>
@@ -29,7 +34,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public override string Name => "MediathekViewMover";
 
     /// <inheritdoc />
-    public override Guid Id => Guid.Parse("18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A");
+    public override Guid Id => Guid.Parse(PluginId);
 
     /// <summary>
     /// Gets the current plugin instance.

@@ -15,10 +15,14 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Update build.yaml
+
+  Merge pull request #1 from Minegamer06/dev
+
+  Loggin bei Sprachauflösung erweitert
+
+  Update build.yaml and manifest.json for release version 0.0.1.4
+
   Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover
 
   AudioDescription sollte immer unten sein, ausderm kann es sonst bugs geben
-
-  Update build.yaml and manifest.json for release version 0.0.1.3
-
-  Pfade für FFMpegCore werden erst später in der Task aufgelöst. Eingestelle Optionen werden jezt auch gesetzt.

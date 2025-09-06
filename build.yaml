@@ -15,12 +15,8 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
-  Pfade für FFMpegCore werden erst später in der Task aufgelöst. Eingestelle Optionen werden jezt auch gesetzt.
+  Das minimum sollte sich auf die Video/Audioversionen beziehen
 
-  Update build.yaml and manifest.json for release version 0.0.1.2
+  Fixed Language Detection Issuse Addet Unit Test Projekt
 
-  Update build.yaml
-
-  Merge branch 'master' of https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover
-
-  Debuging FFMPEG Pfad Probleme
+  Test Changes for new Release action

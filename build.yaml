@@ -1,7 +1,7 @@
 ---
 name: "MediathekViewMover"
 guid: "18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A"
-version: "0.0.1.6"
+version: "0.0.1.7"
 targetAbi: "10.10.7.0"
 framework: "net8.0"
 overview: "Ordnet MediathekView-Downloads sauber für Jellyfin ein."
@@ -15,20 +15,8 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
-  Update build.yaml
+  Merge branch 'master' into dev
 
-  Merge pull request #3 from Minegamer06/dev
+  Update build.yaml and manifest.json for release version 0.0.1.7
 
-  Fixed Language Detection Issuse Addet Unit Test Projekt
-
-  Merge pull request #2 from Minegamer06/dev
-
-  Test Changes for new Release action
-
-  Update build.yaml and manifest.json for release version 0.0.1.5
-
-  Update build.yaml
-
-  Merge pull request #1 from Minegamer06/dev
-
-  Loggin bei Sprachauflösung erweitert
+  Das minimum sollte sich auf die Video/Audioversionen beziehen

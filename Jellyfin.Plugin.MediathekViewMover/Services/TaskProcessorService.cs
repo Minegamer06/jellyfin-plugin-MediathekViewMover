@@ -106,7 +106,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                     var seasonFolder = Path.Combine(task.TargetShowFolder, $"Staffel {group.Key.Season}");
                     try
                     {
-                        await ProcessEpisodeGroupAsync(episodeSeason, items, seasonFolder, cancellationToken)
+                        await ProcessEpisodeGroupAsync(episodeSeason, items, seasonFolder, task.MinCount, cancellationToken)
                             .ConfigureAwait(false);
                     }
                     catch
@@ -153,6 +153,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             (int Season, int Episode) episodeInfo,
             System.Collections.Generic.List<FileInput> files,
             string targetFolder,
+            int minCount,
             CancellationToken cancellationToken)
         {
             try
@@ -171,9 +172,9 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
                 var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
                 var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
 
-                if (videoFiles.Count == 0)
+                if (videoFiles.Count < minCount)
                 {
-                    _logger.LogInformation("Keine Videodateien in der Gruppe S{Season:D2}E{Episode:D2} gefunden", episodeInfo.Season, episodeInfo.Episode);
+                    _logger.LogInformation("Zu wenige Videodateien in der Gruppe S{Season:D2}E{Episode:D2} (gefunden: {Found}, benötigt: {Min})", episodeInfo.Season, episodeInfo.Episode, videoFiles.Count, minCount);
                     return;
                 }
 

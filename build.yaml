@@ -15,6 +15,10 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Merge pull request #4 from Minegamer06/dev
+
+  Update build.yaml and manifest.json for release version 0.0.1.7
+
   Merge branch 'master' into dev
 
   Update build.yaml and manifest.json for release version 0.0.1.7

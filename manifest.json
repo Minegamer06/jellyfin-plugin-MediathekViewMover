@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.0.1.8",
+        "changelog": " - cef2833 Update to Version 0.0.1.8\n - 74be9f3 Update manifest.json\n - 5939b37 Update manifest.json\n - c8e0f0b Update build.yaml and manifest.json for release version 0.0.1.7\n - 964049c Merge pull request #4 from Minegamer06/dev\n - 75f72b1 Update build.yaml and manifest.json for release version 0.0.1.7\n - 148a9a9 Merge branch 'master' into dev\n - 32821d4 Update build.yaml and manifest.json for release version 0.0.1.7\n - 2c3b0fb Das minimum sollte sich auf die Video/Audioversionen beziehen",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover/releases/download/v0.0.1.8/mediathekviewmover_0.0.1.8.zip",
+        "checksum": "1e9e56be4f5957bbdde59583a759e5e1",
+        "timestamp": "2025-09-06T16:34:57Z"
+      },
+      {
         "version": "0.0.1.6",
         "changelog": " - a5dcc1e Update build.yaml\n - 660fd47 Merge pull request #3 from Minegamer06/dev\n - 067b8c0 Fixed Language Detection Issuse Addet Unit Test Projekt\n - bd2c481 Merge pull request #2 from Minegamer06/dev\n - d803f4d Test Changes for new Release action\n - 670f800 Update build.yaml and manifest.json for release version 0.0.1.5\n - b6d98a1 Update build.yaml\n - fbab43c Merge pull request #1 from Minegamer06/dev\n - 37dd0a7 Loggin bei Sprachauflösung erweitert",
         "targetAbi": "10.10.7.0",

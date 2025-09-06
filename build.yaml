@@ -15,8 +15,8 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Merge branch 'master' into dev
+
+  Update build.yaml and manifest.json for release version 0.0.1.7
+
   Das minimum sollte sich auf die Video/Audioversionen beziehen
-
-  Fixed Language Detection Issuse Addet Unit Test Projekt
-
-  Test Changes for new Release action

@@ -11,7 +11,7 @@ public class MoverTask
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets minimale Anzahl Dateien.
+    /// Gets or sets minimale Anzahl an Video Dateien.
     /// </summary>
     public int MinCount { get; set; }
 

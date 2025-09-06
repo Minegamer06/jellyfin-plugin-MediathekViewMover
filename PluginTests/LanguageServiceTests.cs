@@ -6,7 +6,7 @@ using Xunit;
 
 namespace PluginTests;
 
-public class UnitTest1
+public class LanguageServiceTests
 {
     private readonly LanguageService _languageService = new(new NullLogger<LanguageService>());
 

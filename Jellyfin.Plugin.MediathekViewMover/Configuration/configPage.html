@@ -387,7 +387,7 @@
 
                 function confirmDeleteTask(index) {
                     const task = currentMoverTasks[index];
-                    const message = 'Sind Sie sicher, dass Sie die Task "' + (task.Title || 'Unbenannt') + '" löschen möchten?';
+                    const message = `Sind Sie sicher, dass Sie die Task "${task.Title || 'Unbenannt'}" löschen möchten?`;
 
                     confirmationPopup(message, 'Task löschen?', function(confirm) {
                         if (confirm) {

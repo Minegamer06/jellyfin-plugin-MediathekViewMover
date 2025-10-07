@@ -405,7 +405,7 @@
                         Dashboard.confirm(message, title, resultCallback);
                     }
                     else {
-                        const result = confirm(title + '\n\n' + message);
+                        const result = confirm(`${title}\n\n${message}`);
                         resultCallback(result);
                     }
                 }

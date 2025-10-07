@@ -260,7 +260,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             }
             finally
             {
-                _logger.LogInformation("Verarbeite von Episode S{Season:D2}E{Episode:D2} - {EpisodeTitle} mit {FileCount} Dateien abgeschlossen", episodeInfo.Season, episodeInfo.Episode, files.First().File.Name, files.Count);
+                _logger.LogInformation("Verarbeitung von Episode S{Season:D2}E{Episode:D2} - {EpisodeTitle} mit {FileCount} Dateien abgeschlossen", episodeInfo.Season, episodeInfo.Episode, files.First().File.Name, files.Count);
             }
         }
 

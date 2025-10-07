@@ -15,6 +15,28 @@ artifacts:
   - "FFMpegCore.dll"
   - "Instances.dll"
 changelog: >-
+  Bump version to 0.0.2.0 in build.yaml
+
+  Merge pull request #5 from Minegamer06/dev
+
+  Update Jellyfin.Plugin.MediathekViewMover/Configuration/configPage.html
+
+  Update Jellyfin.Plugin.MediathekViewMover/Configuration/configPage.html
+
+  Update Jellyfin.Plugin.MediathekViewMover/Services/TaskProcessorService.cs
+
+  Merge remote-tracking branch 'origin/dev' into dev
+
+  The Table in the Config UI is now in Dark Style too. Improvet User Expierence.
+
+  Changed Styling to Inline and JS because Plugin pages can't use style tags
+
+  Implement task management UI with modal for adding and editing tasks
+
+  Erweitert die Liste der nicht unterstützten Dateiendungen und verbessert das Logging beim Verarbeiten von Episoden
+
+  Update build.yaml and manifest.json for release version 0.0.1.8
+
   Update to Version 0.0.1.8
 
   Update manifest.json
@@ -29,6 +51,18 @@ changelog: >-
 
   Merge branch 'master' into dev
 
-  Update build.yaml and manifest.json for release version 0.0.1.7
+  Update build.yaml and manifest.json for release version 0.0.1.6
 
-  Das minimum sollte sich auf die Video/Audioversionen beziehen
+  Update build.yaml
+
+  Merge pull request #3 from Minegamer06/dev
+
+  Merge pull request #2 from Minegamer06/dev
+
+  Update build.yaml and manifest.json for release version 0.0.1.5
+
+  Update build.yaml
+
+  Merge pull request #1 from Minegamer06/dev
+
+  Update build.yaml and manifest.json for release version 0.0.1.4

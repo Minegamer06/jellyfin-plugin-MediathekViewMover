@@ -8,6 +8,14 @@
     "category": "General",
     "versions": [
       {
+        "version": "0.0.2.0",
+        "changelog": " - 500b339 Bump version to 0.0.2.0 in build.yaml\n - a9189e0 Merge pull request #5 from Minegamer06/dev\n - fd47d86 Update Jellyfin.Plugin.MediathekViewMover/Configuration/configPage.html\n - 32e9acf Update Jellyfin.Plugin.MediathekViewMover/Configuration/configPage.html\n - ec6ec09 Update Jellyfin.Plugin.MediathekViewMover/Services/TaskProcessorService.cs\n - 1675f9d Merge remote-tracking branch 'origin/dev' into dev\n - 3440e86 The Table in the Config UI is now in Dark Style too. Improvet User Expierence.\n - d1a7be6 Changed Styling to Inline and JS because Plugin pages can't use style tags\n - 7c6ea69 Implement task management UI with modal for adding and editing tasks\n - d3b5cff Erweitert die Liste der nicht unterstützten Dateiendungen und verbessert das Logging beim Verarbeiten von Episoden\n - 0d70aea Update build.yaml and manifest.json for release version 0.0.1.8\n - cef2833 Update to Version 0.0.1.8\n - 74be9f3 Update manifest.json\n - 5939b37 Update manifest.json\n - c8e0f0b Update build.yaml and manifest.json for release version 0.0.1.7\n - 964049c Merge pull request #4 from Minegamer06/dev\n - 75f72b1 Update build.yaml and manifest.json for release version 0.0.1.7\n - 148a9a9 Merge branch 'master' into dev\n - 9c22e76 Update build.yaml and manifest.json for release version 0.0.1.6\n - a5dcc1e Update build.yaml\n - 660fd47 Merge pull request #3 from Minegamer06/dev\n - bd2c481 Merge pull request #2 from Minegamer06/dev\n - 670f800 Update build.yaml and manifest.json for release version 0.0.1.5\n - b6d98a1 Update build.yaml\n - fbab43c Merge pull request #1 from Minegamer06/dev\n - 6cb7c2f Update build.yaml and manifest.json for release version 0.0.1.4",
+        "targetAbi": "10.10.7.0",
+        "sourceUrl": "https://github.com/Minegamer06/jellyfin-plugin-MediathekViewMover/releases/download/v0.0.2.0/mediathekviewmover_0.0.2.0.zip",
+        "checksum": "9943a1154ad14aa8d2c48a21275d84a7",
+        "timestamp": "2025-10-07T19:43:09Z"
+      },
+      {
         "version": "0.0.1.8",
         "changelog": " - cef2833 Update to Version 0.0.1.8\n - 74be9f3 Update manifest.json\n - 5939b37 Update manifest.json\n - c8e0f0b Update build.yaml and manifest.json for release version 0.0.1.7\n - 964049c Merge pull request #4 from Minegamer06/dev\n - 75f72b1 Update build.yaml and manifest.json for release version 0.0.1.7\n - 148a9a9 Merge branch 'master' into dev\n - 32821d4 Update build.yaml and manifest.json for release version 0.0.1.7\n - 2c3b0fb Das minimum sollte sich auf die Video/Audioversionen beziehen",
         "targetAbi": "10.10.7.0",

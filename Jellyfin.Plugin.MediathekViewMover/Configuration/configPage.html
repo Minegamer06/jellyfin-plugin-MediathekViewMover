@@ -65,7 +65,7 @@
                     <div id="TaskMinCountGroup">
                         <label for="TaskMinCount">Mindestanzahl Dateien</label>
                         <input type="number" id="TaskMinCount" min="1" value="1" />
-                        <div id="TaskMinCountDescription">Mindestanzahl Dateien die vorhanden sein müssen</div>
+                        <div id="TaskMinCountDescription">Mindestanzahl an Video/Audiodateien die vorhanden sein müssen.</div>
                     </div>
                     <div id="TaskSourceGroup">
                         <label for="TaskSourceFolder">Quellordner *</label>
@@ -96,12 +96,12 @@
         <script type="text/javascript">
             (function() {
                 // Alle Funktionen und Variablen in einer IIFE kapseln
-                var TemplateConfig = {
+                let TemplateConfig = {
                     pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
                 };
 
-                var currentMoverTasks = [];
-                var editingTaskIndex = -1;
+                let currentMoverTasks = [];
+                let editingTaskIndex = -1;
 
                 // CSS Styles per JavaScript setzen
                 function applyInlineStyles() {
@@ -109,12 +109,12 @@
                     document.body.style.cssText = 'margin: 0; padding: 0; font-family: inherit;';
 
                     // Container styles
-                    var page = document.querySelector('.page');
+                    let page = document.querySelector('.page');
                     if (page) {
                         page.style.cssText = 'padding: 20px !important;';
                     }
 
-                    var contentPrimary = document.querySelector('.content-primary');
+                    let contentPrimary = document.querySelector('.content-primary');
                     if (contentPrimary) {
                         contentPrimary.style.cssText = 'max-width: none !important; width: 100% !important;';
                     }
@@ -143,31 +143,31 @@
                 function createTableStyles() {
                     return {
                         container: 'margin-top: 20px;',
-                        table: 'width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); table-layout: fixed;',
-                        th: 'padding: 12px; text-align: left; border-bottom: 1px solid #ddd; word-wrap: break-word; overflow-wrap: break-word; background-color: #f8f9fa; font-weight: 600; color: #495057;',
-                        td: 'padding: 12px; text-align: left; border-bottom: 1px solid #ddd; word-wrap: break-word; overflow-wrap: break-word;',
-                        pathCell: 'font-family: monospace; font-size: 11px; background-color: #f8f9fa; border-radius: 3px; padding: 4px 6px; margin: 2px 0; word-break: break-all;',
+                        table: 'width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #222; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.3); table-layout: fixed;',
+                        th: 'padding: 12px; text-align: left; border-bottom: 1px solid #444; word-wrap: break-word; overflow-wrap: break-word; background-color: #333; font-weight: 600; color: #eee;',
+                        td: 'padding: 12px; text-align: left; border-bottom: 1px solid #444; word-wrap: break-word; overflow-wrap: break-word; color: #eee;',
+                        pathCell: 'font-family: monospace; font-size: 11px; background-color: #333; border-radius: 3px; padding: 4px 6px; margin: 2px 0; word-break: break-all; color: white;',
                         taskActions: 'display: flex; gap: 8px; flex-wrap: wrap;',
                         btnEdit: 'background-color: #007bff !important; color: white !important; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;',
                         btnDelete: 'background-color: #dc3545 !important; color: white !important; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;',
                         btnAdd: 'background-color: #28a745 !important; color: white !important; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px;',
-                        emptyState: 'text-align: center; padding: 50px; color: #666; background: #f8f9fa; border-radius: 12px; border: 2px dashed #ddd;',
-                        emptyStateH4: 'margin-bottom: 10px; color: #333;'
+                        emptyState: 'text-align: center; padding: 50px; color: #aaa; background: #222; border-radius: 12px; border: 2px dashed #444;',
+                        emptyStateH4: 'margin-bottom: 10px; color: #eee;'
                     };
                 }
 
-                var modalStyles = createModalStyles();
-                var tableStyles = createTableStyles();
+                let modalStyles = createModalStyles();
+                let tableStyles = createTableStyles();
 
                 function applyModalStyles() {
-                    var modal = document.getElementById('TaskModal');
-                    var content = document.getElementById('TaskModalContent');
-                    var header = document.getElementById('TaskModalHeader');
-                    var title = document.getElementById('ModalTitle');
-                    var closeBtn = document.getElementById('CloseModalBtn');
-                    var footer = document.getElementById('TaskModalFooter');
-                    var cancelBtn = document.getElementById('CancelBtn');
-                    var saveBtn = document.getElementById('SaveTaskBtn');
+                    let modal = document.getElementById('TaskModal');
+                    let content = document.getElementById('TaskModalContent');
+                    let header = document.getElementById('TaskModalHeader');
+                    let title = document.getElementById('ModalTitle');
+                    let closeBtn = document.getElementById('CloseModalBtn');
+                    let footer = document.getElementById('TaskModalFooter');
+                    let cancelBtn = document.getElementById('CancelBtn');
+                    let saveBtn = document.getElementById('SaveTaskBtn');
 
                     if (modal) modal.style.cssText = modalStyles.overlay;
                     if (content) content.style.cssText = modalStyles.content;
@@ -179,68 +179,68 @@
                     if (saveBtn) saveBtn.style.cssText = modalStyles.btnSave;
 
                     // Form groups
-                    var groups = ['TaskTitleGroup', 'TaskMinCountGroup', 'TaskSourceGroup', 'TaskTargetGroup'];
+                    let groups = ['TaskTitleGroup', 'TaskMinCountGroup', 'TaskSourceGroup', 'TaskTargetGroup'];
                     groups.forEach(function(groupId) {
-                        var group = document.getElementById(groupId);
+                        let group = document.getElementById(groupId);
                         if (group) group.style.cssText = modalStyles.formGroup;
                     });
 
                     // Labels
-                    var labels = document.querySelectorAll('#TaskForm label');
+                    let labels = document.querySelectorAll('#TaskForm label');
                     labels.forEach(function(label) {
                         label.style.cssText = modalStyles.label;
                     });
 
                     // Inputs
-                    var inputs = document.querySelectorAll('#TaskForm input');
+                    let inputs = document.querySelectorAll('#TaskForm input');
                     inputs.forEach(function(input) {
                         input.style.cssText = modalStyles.input;
                     });
 
                     // Field descriptions
-                    var descriptions = ['TaskTitleDescription', 'TaskMinCountDescription', 'TaskSourceDescription', 'TaskTargetDescription'];
+                    let descriptions = ['TaskTitleDescription', 'TaskMinCountDescription', 'TaskSourceDescription', 'TaskTargetDescription'];
                     descriptions.forEach(function(descId) {
-                        var desc = document.getElementById(descId);
+                        let desc = document.getElementById(descId);
                         if (desc) desc.style.cssText = modalStyles.fieldDescription;
                     });
 
                     // Error messages
-                    var errors = ['TitleError', 'SourceError', 'TargetError'];
+                    let errors = ['TitleError', 'SourceError', 'TargetError'];
                     errors.forEach(function(errorId) {
-                        var error = document.getElementById(errorId);
+                        let error = document.getElementById(errorId);
                         if (error) error.style.cssText = modalStyles.errorMessage;
                     });
 
                     // Folder input groups
-                    var sourceGroup = document.getElementById('SourceFolderInputGroup');
-                    var targetGroup = document.getElementById('TargetFolderInputGroup');
+                    let sourceGroup = document.getElementById('SourceFolderInputGroup');
+                    let targetGroup = document.getElementById('TargetFolderInputGroup');
                     if (sourceGroup) sourceGroup.style.cssText = modalStyles.folderInputGroup;
                     if (targetGroup) targetGroup.style.cssText = modalStyles.folderInputGroup;
 
                     // Folder select buttons
-                    var sourceBtn = document.getElementById('SelectSourceBtn');
-                    var targetBtn = document.getElementById('SelectTargetBtn');
+                    let sourceBtn = document.getElementById('SelectSourceBtn');
+                    let targetBtn = document.getElementById('SelectTargetBtn');
                     if (sourceBtn) sourceBtn.style.cssText = modalStyles.folderSelectBtn;
                     if (targetBtn) targetBtn.style.cssText = modalStyles.folderSelectBtn;
 
                     // Flex for folder input groups
-                    var sourceInput = document.getElementById('TaskSourceFolder');
-                    var targetInput = document.getElementById('TaskTargetFolder');
+                    let sourceInput = document.getElementById('TaskSourceFolder');
+                    let targetInput = document.getElementById('TaskTargetFolder');
                     if (sourceInput) sourceInput.style.flex = '1';
                     if (targetInput) targetInput.style.flex = '1';
                 }
 
                 function renderTasksTable(tasks) {
-                    var container = document.getElementById('TasksTableContainer');
+                    let container = document.getElementById('TasksTableContainer');
                     container.style.cssText = tableStyles.container;
 
                     if (!tasks || tasks.length === 0) {
-                        var emptyDiv = document.createElement('div');
+                        let emptyDiv = document.createElement('div');
                         emptyDiv.style.cssText = tableStyles.emptyState;
-                        var h4 = document.createElement('h4');
+                        let h4 = document.createElement('h4');
                         h4.style.cssText = tableStyles.emptyStateH4;
                         h4.textContent = 'Keine Mappings konfiguriert';
-                        var p = document.createElement('p');
+                        let p = document.createElement('p');
                         p.textContent = 'Klicken Sie auf "Neues Mapping hinzufügen" um zu beginnen.';
                         emptyDiv.appendChild(h4);
                         emptyDiv.appendChild(p);
@@ -249,17 +249,17 @@
                         return;
                     }
 
-                    var table = document.createElement('table');
+                    const table = document.createElement('table');
                     table.style.cssText = tableStyles.table;
 
-                    var thead = document.createElement('thead');
-                    var headerRow = document.createElement('tr');
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
 
-                    var headers = ['Titel', 'Min. Anzahl', 'Quellordner', 'Zielordner', 'Aktionen'];
-                    var widths = ['15%', '10%', '30%', '30%', '15%'];
+                    const headers = ['Titel', 'Min. Anzahl', 'Quellordner', 'Zielordner', 'Aktionen'];
+                    const widths = ['15%', '10%', '30%', '30%', '15%'];
 
                     headers.forEach(function(headerText, index) {
-                        var th = document.createElement('th');
+                        const th = document.createElement('th');
                         th.style.cssText = tableStyles.th + ' width: ' + widths[index] + ';';
                         th.textContent = headerText;
                         headerRow.appendChild(th);
@@ -268,32 +268,32 @@
                     thead.appendChild(headerRow);
                     table.appendChild(thead);
 
-                    var tbody = document.createElement('tbody');
+                    let tbody = document.createElement('tbody');
 
                     tasks.forEach(function(task, index) {
-                        var row = document.createElement('tr');
-                        row.style.cssText = 'background: white;';
-                        row.onmouseover = function() { this.style.backgroundColor = '#f8f9fa'; };
-                        row.onmouseout = function() { this.style.backgroundColor = 'white'; };
+                        const row = document.createElement('tr');
+                        row.style.cssText = 'background: rgb(51, 51, 51);';
+                        row.onmouseover = function() { this.style.backgroundColor = '#3C3C3C'; };
+                        row.onmouseout = function() { this.style.backgroundColor = 'rgb(51, 51, 51)'; };
 
                         // Title cell
-                        var titleCell = document.createElement('td');
+                        const titleCell = document.createElement('td');
                         titleCell.style.cssText = tableStyles.td + ' width: 15%;';
-                        var strongTitle = document.createElement('strong');
+                        const strongTitle = document.createElement('strong');
                         strongTitle.textContent = task.Title || 'Unbenannt';
                         titleCell.appendChild(strongTitle);
                         row.appendChild(titleCell);
 
                         // Min count cell
-                        var countCell = document.createElement('td');
+                        const countCell = document.createElement('td');
                         countCell.style.cssText = tableStyles.td + ' width: 10%;';
                         countCell.textContent = task.MinCount || 1;
                         row.appendChild(countCell);
 
                         // Source folder cell
-                        var sourceCell = document.createElement('td');
+                        const sourceCell = document.createElement('td');
                         sourceCell.style.cssText = tableStyles.td + ' width: 30%;';
-                        var sourceDiv = document.createElement('div');
+                        const sourceDiv = document.createElement('div');
                         sourceDiv.style.cssText = tableStyles.pathCell;
                         sourceDiv.title = task.SourceShowFolder || '';
                         sourceDiv.textContent = task.SourceShowFolder || 'Nicht gesetzt';
@@ -301,9 +301,9 @@
                         row.appendChild(sourceCell);
 
                         // Target folder cell
-                        var targetCell = document.createElement('td');
+                        const targetCell = document.createElement('td');
                         targetCell.style.cssText = tableStyles.td + ' width: 30%;';
-                        var targetDiv = document.createElement('div');
+                        const targetDiv = document.createElement('div');
                         targetDiv.style.cssText = tableStyles.pathCell;
                         targetDiv.title = task.TargetShowFolder || '';
                         targetDiv.textContent = task.TargetShowFolder || 'Nicht gesetzt';
@@ -311,17 +311,19 @@
                         row.appendChild(targetCell);
 
                         // Actions cell
-                        var actionsCell = document.createElement('td');
+                        const actionsCell = document.createElement('td');
                         actionsCell.style.cssText = tableStyles.td + ' width: 15%;';
-                        var actionsDiv = document.createElement('div');
+                        const actionsDiv = document.createElement('div');
                         actionsDiv.style.cssText = tableStyles.taskActions;
 
-                        var editBtn = document.createElement('button');
+                        const editBtn = document.createElement('button');
+                        editBtn.type = 'button';
                         editBtn.style.cssText = tableStyles.btnEdit;
                         editBtn.textContent = 'Bearbeiten';
                         editBtn.onclick = function() { editTask(index); };
 
-                        var deleteBtn = document.createElement('button');
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
                         deleteBtn.style.cssText = tableStyles.btnDelete;
                         deleteBtn.textContent = 'Löschen';
                         deleteBtn.onclick = function() { confirmDeleteTask(index); };
@@ -341,13 +343,13 @@
 
                 function showTaskModal(isEdit, taskIndex) {
                     editingTaskIndex = taskIndex;
-                    var modal = document.getElementById('TaskModal');
-                    var title = document.getElementById('ModalTitle');
+                    const modal = document.getElementById('TaskModal');
+                    const title = document.getElementById('ModalTitle');
 
                     title.textContent = isEdit ? 'Task bearbeiten' : 'Neue Task hinzufügen';
 
                     if (isEdit && taskIndex >= 0) {
-                        var task = currentMoverTasks[taskIndex];
+                        const task = currentMoverTasks[taskIndex];
                         document.getElementById('TaskTitle').value = task.Title || '';
                         document.getElementById('TaskMinCount').value = task.MinCount || 1;
                         document.getElementById('TaskSourceFolder').value = task.SourceShowFolder || '';
@@ -384,11 +386,36 @@
                 }
 
                 function confirmDeleteTask(index) {
-                    var task = currentMoverTasks[index];
-                    var message = 'Sind Sie sicher, dass Sie die Task "' + (task.Title || 'Unbenannt') + '" löschen möchten?';
+                    const task = currentMoverTasks[index];
+                    const message = 'Sind Sie sicher, dass Sie die Task "' + (task.Title || 'Unbenannt') + '" löschen möchten?';
 
-                    if (confirm(message)) {
-                        deleteTask(index);
+                    confirmationPopup(message, 'Task löschen?', function(confirm) {
+                        if (confirm) {
+                            deleteTask(index);
+                            showToast('Task gelöscht');
+                        }
+                        else {
+                            showToast('Löschvorgang abgebrochen');
+                        }
+                    });
+                }
+
+                function confirmationPopup(message, title, resultCallback) {
+                    if (typeof Dashboard !== 'undefined' && typeof Dashboard.confirm === 'function') {
+                        Dashboard.confirm(message, title, resultCallback);
+                    }
+                    else {
+                        const result = confirm(title + '\n\n' + message);
+                        resultCallback(result);
+                    }
+                }
+
+                function showToast(message) {
+                    if (typeof Dashboard !== 'undefined' && typeof Dashboard.alert === 'function') {
+                        Dashboard.alert(message);
+                    }
+                    else {
+                        alert(message);
                     }
                 }
 
@@ -398,12 +425,12 @@
                 }
 
                 function validateTaskForm() {
-                    var isValid = true;
+                    let isValid = true;
                     clearValidationErrors();
 
-                    var title = document.getElementById('TaskTitle').value.trim();
-                    var sourceFolder = document.getElementById('TaskSourceFolder').value.trim();
-                    var targetFolder = document.getElementById('TaskTargetFolder').value.trim();
+                    const title = document.getElementById('TaskTitle').value.trim();
+                    const sourceFolder = document.getElementById('TaskSourceFolder').value.trim();
+                    const targetFolder = document.getElementById('TaskTargetFolder').value.trim();
 
                     if (!title) {
                         showValidationError('TitleError');
@@ -420,7 +447,7 @@
                         isValid = false;
                     }
 
-                    var duplicateIndex = currentMoverTasks.findIndex(function(task, index) {
+                    const duplicateIndex = currentMoverTasks.findIndex(function (task, index) {
                         return task.Title === title && index !== editingTaskIndex;
                     });
 
@@ -433,7 +460,7 @@
                 }
 
                 function showValidationError(errorId, customMessage) {
-                    var errorElement = document.getElementById(errorId);
+                    const errorElement = document.getElementById(errorId);
                     if (errorElement) {
                         if (customMessage) {
                             errorElement.textContent = customMessage;
@@ -443,9 +470,9 @@
                 }
 
                 function clearValidationErrors() {
-                    var errors = ['TitleError', 'SourceError', 'TargetError'];
+                    const errors = ['TitleError', 'SourceError', 'TargetError'];
                     errors.forEach(function(errorId) {
-                        var error = document.getElementById(errorId);
+                        const error = document.getElementById(errorId);
                         if (error) error.style.display = 'none';
                     });
                 }
@@ -455,7 +482,7 @@
                         return;
                     }
 
-                    var task = {
+                    const task = {
                         Title: document.getElementById('TaskTitle').value.trim(),
                         MinCount: parseInt(document.getElementById('TaskMinCount').value) || 1,
                         SourceShowFolder: document.getElementById('TaskSourceFolder').value.trim(),
@@ -511,12 +538,12 @@
                     applyInlineStyles();
 
                     // Apply button styles
-                    var addBtn = document.getElementById('AddTaskBtn');
+                    const addBtn = document.getElementById('AddTaskBtn');
                     if (addBtn) {
                         addBtn.style.cssText = tableStyles.btnAdd;
                     }
 
-                    var taskContainer = document.getElementById('TaskManagementContainer');
+                    const taskContainer = document.getElementById('TaskManagementContainer');
                     if (taskContainer) {
                         taskContainer.style.cssText = tableStyles.container;
                     }
@@ -528,26 +555,26 @@
                 // Event Listeners Setup
                 function setupEventListeners() {
                     // Button events
-                    var addBtn = document.getElementById('AddTaskBtn');
+                    const addBtn = document.getElementById('AddTaskBtn');
                     if (addBtn) addBtn.onclick = addNewTask;
 
-                    var closeBtn = document.getElementById('CloseModalBtn');
+                    const closeBtn = document.getElementById('CloseModalBtn');
                     if (closeBtn) closeBtn.onclick = hideTaskModal;
 
-                    var cancelBtn = document.getElementById('CancelBtn');
+                    const cancelBtn = document.getElementById('CancelBtn');
                     if (cancelBtn) cancelBtn.onclick = hideTaskModal;
 
-                    var saveBtn = document.getElementById('SaveTaskBtn');
+                    const saveBtn = document.getElementById('SaveTaskBtn');
                     if (saveBtn) saveBtn.onclick = saveTask;
 
-                    var selectSourceBtn = document.getElementById('SelectSourceBtn');
+                    const selectSourceBtn = document.getElementById('SelectSourceBtn');
                     if (selectSourceBtn) {
                         selectSourceBtn.onclick = function() {
                             openFolderDialog('TaskSourceFolder', 'Quellordner auswählen');
                         };
                     }
 
-                    var selectTargetBtn = document.getElementById('SelectTargetBtn');
+                    const selectTargetBtn = document.getElementById('SelectTargetBtn');
                     if (selectTargetBtn) {
                         selectTargetBtn.onclick = function() {
                             openFolderDialog('TaskTargetFolder', 'Zielordner auswählen');
@@ -557,7 +584,7 @@
                     // Keyboard event handlers
                     document.addEventListener('keydown', function(event) {
                         if (event.key === 'Escape') {
-                            var modal = document.getElementById('TaskModal');
+                            const modal = document.getElementById('TaskModal');
                             if (modal && modal.style.display === 'block') {
                                 hideTaskModal();
                             }
@@ -589,7 +616,7 @@
                 }
 
                 // Page show event
-                var configPage = document.querySelector('#TemplateConfigPage');
+                const configPage = document.querySelector('#TemplateConfigPage');
                 if (configPage) {
                     configPage.addEventListener('pageshow', function() {
                         initializePage();
@@ -598,9 +625,9 @@
                         }
                         if (typeof ApiClient !== 'undefined' && ApiClient.getPluginConfiguration) {
                             ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                                var deleteSourceEl = document.querySelector('#DeleteSourceSetting');
-                                var audioDescEl = document.querySelector('#AudioDescriptionPatterns');
-                                var skipAudioEl = document.querySelector('#SkipAudioDescription');
+                                const deleteSourceEl = document.querySelector('#DeleteSourceSetting');
+                                const audioDescEl = document.querySelector('#AudioDescriptionPatterns');
+                                const skipAudioEl = document.querySelector('#SkipAudioDescription');
 
                                 if (deleteSourceEl) deleteSourceEl.checked = config.DeleteSource;
                                 if (audioDescEl) audioDescEl.value = (config.AudioDescriptionPatterns || []).join(', ');
@@ -623,7 +650,7 @@
                 }
 
                 // Form submission
-                var configForm = document.querySelector('#TemplateConfigForm');
+                const configForm = document.querySelector('#TemplateConfigForm');
                 if (configForm) {
                     configForm.addEventListener('submit', function(e) {
                         e.preventDefault();
@@ -634,9 +661,9 @@
 
                         if (typeof ApiClient !== 'undefined' && ApiClient.getPluginConfiguration) {
                             ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                                var deleteSourceEl = document.querySelector('#DeleteSourceSetting');
-                                var audioDescEl = document.querySelector('#AudioDescriptionPatterns');
-                                var skipAudioEl = document.querySelector('#SkipAudioDescription');
+                                const deleteSourceEl = document.querySelector('#DeleteSourceSetting');
+                                const audioDescEl = document.querySelector('#AudioDescriptionPatterns');
+                                const skipAudioEl = document.querySelector('#SkipAudioDescription');
 
                                 if (deleteSourceEl) config.DeleteSource = deleteSourceEl.checked;
                                 if (audioDescEl) {

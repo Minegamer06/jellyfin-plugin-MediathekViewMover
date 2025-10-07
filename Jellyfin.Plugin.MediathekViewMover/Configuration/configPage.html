@@ -2,52 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Template</title>
-    <style>
-        .moverTaskItem {
-            margin-bottom: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            border: 2px solid #ccc;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: rgba(0,0,0,0.05);
-        }
-
-        .moverTaskItem label {
-            flex: 1 1 100%;
-            margin-bottom: 5px;
-        }
-
-        .moverTaskItem .field-container {
-            display: flex;
-            flex: 1 1 100%;
-            gap: 10px;
-            align-items: flex-start;
-        }
-
-        .moverTaskItem .field-container input {
-            flex: 1;
-        }
-
-        .moverTaskItem .field-container button {
-            flex: 0 0 auto;
-            margin-left: 10px;
-        }
-
-        .selectFolder {
-            background-color: #404040 !important;
-            color: #fff !important;
-        }
-
-        .removeMoverTask {
-            background-color: #c33 !important;
-            color: #fff !important;
-            align-self: flex-end;
-            margin-left: auto;
-        }
-    </style>
+    <title>MediathekView Mover Configuration</title>
 </head>
 <body>
     <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
@@ -73,14 +28,17 @@
                         </label>
                         <div class="fieldDescription">Wenn aktiviert, werden Audiodeskriptionsspuren nicht in die Zieldatei übernommen</div>
                     </div>
-                    <div class="inputContainer">
+
+                    <!-- Task Management Section -->
+                    <div class="inputContainer" id="TaskManagementContainer">
                         <label class="inputLabel">Folder Mappings</label>
-                        <div id="MoverTasksList"></div>
-                        <button type="button" is="emby-button" class="raised emby-button" id="AddMoverTaskBtn">
-                            <span>Mapping hinzufügen</span>
+                        <button type="button" id="AddTaskBtn">
+                            <span>+ Neues Mapping hinzufügen</span>
                         </button>
+                        <div id="TasksTableContainer"></div>
                         <div class="fieldDescription">Definiere hier die Ordner-Zuordnungen für den Mover.</div>
                     </div>
+
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -89,115 +47,652 @@
                 </form>
             </div>
         </div>
+
+        <!-- Task Edit/Add Modal -->
+        <div id="TaskModal">
+            <div id="TaskModalContent">
+                <div id="TaskModalHeader">
+                    <h3 id="ModalTitle">Task bearbeiten</h3>
+                    <button id="CloseModalBtn">&times;</button>
+                </div>
+                <form id="TaskForm">
+                    <div id="TaskTitleGroup">
+                        <label for="TaskTitle">Titel *</label>
+                        <input type="text" id="TaskTitle" required />
+                        <div id="TaskTitleDescription">Eindeutiger Name für diese Task</div>
+                        <div id="TitleError">Titel ist erforderlich</div>
+                    </div>
+                    <div id="TaskMinCountGroup">
+                        <label for="TaskMinCount">Mindestanzahl Dateien</label>
+                        <input type="number" id="TaskMinCount" min="1" value="1" />
+                        <div id="TaskMinCountDescription">Mindestanzahl an Video/Audiodateien die vorhanden sein müssen.</div>
+                    </div>
+                    <div id="TaskSourceGroup">
+                        <label for="TaskSourceFolder">Quellordner *</label>
+                        <div id="SourceFolderInputGroup">
+                            <input type="text" id="TaskSourceFolder" required />
+                            <button type="button" id="SelectSourceBtn">Auswählen</button>
+                        </div>
+                        <div id="TaskSourceDescription">Ordner, aus dem Dateien verschoben werden</div>
+                        <div id="SourceError">Quellordner ist erforderlich</div>
+                    </div>
+                    <div id="TaskTargetGroup">
+                        <label for="TaskTargetFolder">Zielordner *</label>
+                        <div id="TargetFolderInputGroup">
+                            <input type="text" id="TaskTargetFolder" required />
+                            <button type="button" id="SelectTargetBtn">Auswählen</button>
+                        </div>
+                        <div id="TaskTargetDescription">Ordner, in den Dateien verschoben werden</div>
+                        <div id="TargetError">Zielordner ist erforderlich</div>
+                    </div>
+                </form>
+                <div id="TaskModalFooter">
+                    <button type="button" id="CancelBtn">Abbrechen</button>
+                    <button type="button" id="SaveTaskBtn">Speichern</button>
+                </div>
+            </div>
+        </div>
+
         <script type="text/javascript">
-            var TemplateConfig = {
-                pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
-            };
+            (function() {
+                // Alle Funktionen und Variablen in einer IIFE kapseln
+                let TemplateConfig = {
+                    pluginUniqueId: '18C3F73B-DC8F-4170-A8D0-04EC1A65AD6A'
+                };
 
-            function renderMoverTasks(mappings) {
-                var list = document.getElementById('MoverTasksList');
-                list.innerHTML = '';
-                mappings.forEach(function(mapping, idx) {
-                    var div = document.createElement('div');
-                    div.className = 'moverTaskItem';
-                    div.innerHTML =
-                        '<label for="moverTaskTitle' + idx + '">Title</label>'
-                        + '<div class="field-container">'
-                        + '<input id="moverTaskTitle' + idx + '" type="text" placeholder="Title" class="moverTaskTitle emby-input" value="' + (mapping.Title || '') + '" />'
-                        + '</div>'
-                        + '<label for="moverTaskMinCount' + idx + '">MinCount</label>'
-                        + '<div class="field-container">'
-                        + '<input id="moverTaskMinCount' + idx + '" type="number" min="0" placeholder="MinCount" class="moverTaskMinCount emby-input" value="' + (mapping.MinCount || 1) + '" />'
-                        + '</div>'
-                        + '<label for="MoverTasksource' + idx + '">Source Folder</label>'
-                        + '<div class="field-container">'
-                        + '<input id="MoverTasksource' + idx + '" type="text" placeholder="Source Folder" class="MoverTasksource emby-input" value="' + (mapping.SourceShowFolder || '') + '" />'
-                        + '<button type="button" is="emby-button" class="raised selectFolder emby-button"><span>Select</span></button>'
-                        + '</div>'
-                        + '<label for="moverTaskTarget' + idx + '">Target Folder</label>'
-                        + '<div class="field-container">'
-                        + '<input id="moverTaskTarget' + idx + '" type="text" placeholder="Target Folder" class="moverTaskTarget emby-input" value="' + (mapping.TargetShowFolder || '') + '" />'
-                        + '<button type="button" is="emby-button" class="raised selectFolder emby-button"><span>Select</span></button>'
-                        + '</div>'
-                        + '<button type="button" is="emby-button" class="raised removeMoverTask emby-button"><span>Entfernen</span></button>';
+                let currentMoverTasks = [];
+                let editingTaskIndex = -1;
 
-                    var sourceBtn = div.querySelectorAll('.selectFolder')[0];
-                    var targetBtn = div.querySelectorAll('.selectFolder')[1];
-                    sourceBtn.onclick = function() { openFolderDialog(idx, 'Source'); };
-                    targetBtn.onclick = function() { openFolderDialog(idx, 'Target'); };
+                // CSS Styles per JavaScript setzen
+                function applyInlineStyles() {
+                    // Body styles
+                    document.body.style.cssText = 'margin: 0; padding: 0; font-family: inherit;';
 
-                    div.querySelector('.removeMoverTask').onclick = function() {
-                        mappings.splice(idx, 1);
-                        renderMoverTasks(mappings);
+                    // Container styles
+                    let page = document.querySelector('.page');
+                    if (page) {
+                        page.style.cssText = 'padding: 20px !important;';
+                    }
+
+                    let contentPrimary = document.querySelector('.content-primary');
+                    if (contentPrimary) {
+                        contentPrimary.style.cssText = 'max-width: none !important; width: 100% !important;';
+                    }
+                }
+
+                function createModalStyles() {
+                    return {
+                        overlay: 'display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; backdrop-filter: blur(2px);',
+                        content: 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; width: 90vw; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); z-index: 10000;',
+                        header: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e9ecef;',
+                        title: 'margin: 0; color: #333; font-size: 1.5em;',
+                        closeBtn: 'background: none; border: none; font-size: 28px; cursor: pointer; color: #666; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background-color 0.2s;',
+                        formGroup: 'margin-bottom: 25px;',
+                        label: 'display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;',
+                        input: 'width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; transition: border-color 0.2s; box-sizing: border-box;',
+                        fieldDescription: 'font-size: 12px; color: #666; margin-top: 6px; line-height: 1.4;',
+                        folderInputGroup: 'display: flex; gap: 12px; align-items: stretch;',
+                        folderSelectBtn: 'background-color: #6c757d !important; color: white !important; padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; font-size: 14px; transition: background-color 0.2s;',
+                        modalFooter: 'display: flex; justify-content: flex-end; gap: 12px; margin-top: 30px; padding-top: 20px; border-top: 2px solid #e9ecef;',
+                        btnCancel: 'background-color: #6c757d !important; color: white !important; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s;',
+                        btnSave: 'background-color: #007bff !important; color: white !important; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background-color 0.2s;',
+                        errorMessage: 'color: #dc3545; font-size: 12px; margin-top: 6px; display: none; padding: 4px 8px; background-color: #f8d7da; border-radius: 4px; border: 1px solid #f5c6cb;'
                     };
-                    div.querySelector('.moverTaskTitle').oninput = function(e) { mapping.Title = e.target.value; };
-                    div.querySelector('.moverTaskMinCount').oninput = function(e) { mapping.MinCount = parseInt(e.target.value) || 1; };
-                    div.querySelector('.MoverTasksource').oninput = function(e) { mapping.SourceShowFolder = e.target.value; };
-                    div.querySelector('.moverTaskTarget').oninput = function(e) { mapping.TargetShowFolder = e.target.value; };
-                    list.appendChild(div);
-                });
-            }
+                }
 
-            var currentMoverTasks = [];
+                function createTableStyles() {
+                    return {
+                        container: 'margin-top: 20px;',
+                        table: 'width: 100%; border-collapse: collapse; margin-bottom: 20px; background: #222; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.3); table-layout: fixed;',
+                        th: 'padding: 12px; text-align: left; border-bottom: 1px solid #444; word-wrap: break-word; overflow-wrap: break-word; background-color: #333; font-weight: 600; color: #eee;',
+                        td: 'padding: 12px; text-align: left; border-bottom: 1px solid #444; word-wrap: break-word; overflow-wrap: break-word; color: #eee;',
+                        pathCell: 'font-family: monospace; font-size: 11px; background-color: #333; border-radius: 3px; padding: 4px 6px; margin: 2px 0; word-break: break-all; color: white;',
+                        taskActions: 'display: flex; gap: 8px; flex-wrap: wrap;',
+                        btnEdit: 'background-color: #007bff !important; color: white !important; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;',
+                        btnDelete: 'background-color: #dc3545 !important; color: white !important; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;',
+                        btnAdd: 'background-color: #28a745 !important; color: white !important; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px;',
+                        emptyState: 'text-align: center; padding: 50px; color: #aaa; background: #222; border-radius: 12px; border: 2px dashed #444;',
+                        emptyStateH4: 'margin-bottom: 10px; color: #eee;'
+                    };
+                }
 
-            document.querySelector('#TemplateConfigPage')
-                .addEventListener('pageshow', function() {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#DeleteSourceSetting').checked = config.DeleteSource;
-                        document.querySelector('#AudioDescriptionPatterns').value = (config.AudioDescriptionPatterns || []).join(', ');
-                        document.querySelector('#SkipAudioDescription').checked = config.SkipAudioDescription;
-                        currentMoverTasks = config.MoverTasks || [];
-                        renderMoverTasks(currentMoverTasks);
-                        Dashboard.hideLoadingMsg();
+                let modalStyles = createModalStyles();
+                let tableStyles = createTableStyles();
+
+                function applyModalStyles() {
+                    let modal = document.getElementById('TaskModal');
+                    let content = document.getElementById('TaskModalContent');
+                    let header = document.getElementById('TaskModalHeader');
+                    let title = document.getElementById('ModalTitle');
+                    let closeBtn = document.getElementById('CloseModalBtn');
+                    let footer = document.getElementById('TaskModalFooter');
+                    let cancelBtn = document.getElementById('CancelBtn');
+                    let saveBtn = document.getElementById('SaveTaskBtn');
+
+                    if (modal) modal.style.cssText = modalStyles.overlay;
+                    if (content) content.style.cssText = modalStyles.content;
+                    if (header) header.style.cssText = modalStyles.header;
+                    if (title) title.style.cssText = modalStyles.title;
+                    if (closeBtn) closeBtn.style.cssText = modalStyles.closeBtn;
+                    if (footer) footer.style.cssText = modalStyles.modalFooter;
+                    if (cancelBtn) cancelBtn.style.cssText = modalStyles.btnCancel;
+                    if (saveBtn) saveBtn.style.cssText = modalStyles.btnSave;
+
+                    // Form groups
+                    let groups = ['TaskTitleGroup', 'TaskMinCountGroup', 'TaskSourceGroup', 'TaskTargetGroup'];
+                    groups.forEach(function(groupId) {
+                        let group = document.getElementById(groupId);
+                        if (group) group.style.cssText = modalStyles.formGroup;
                     });
-                });
 
-            document.getElementById('AddMoverTaskBtn').onclick = function() {
-                currentMoverTasks.push({ Title: '', MinCount: 1, SourceShowFolder: '', TargetShowFolder: '' });
-                renderMoverTasks(currentMoverTasks);
-            };
-
-            document.querySelector('#TemplateConfigForm')
-                .addEventListener('submit', function(e) {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        config.DeleteSource = document.querySelector('#DeleteSourceSetting').checked;
-                        config.AudioDescriptionPatterns = document.querySelector('#AudioDescriptionPatterns').value
-                            .split(',')
-                            .map(pattern => pattern.trim())
-                            .filter(pattern => pattern.length > 0);
-                        config.SkipAudioDescription = document.querySelector('#SkipAudioDescription').checked;
-                        config.MoverTasks = currentMoverTasks;
-                        ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
-                            Dashboard.processPluginConfigurationUpdateResult(result);
-                        });
+                    // Labels
+                    let labels = document.querySelectorAll('#TaskForm label');
+                    labels.forEach(function(label) {
+                        label.style.cssText = modalStyles.label;
                     });
 
-                    e.preventDefault();
-                    return false;
-                });
+                    // Inputs
+                    let inputs = document.querySelectorAll('#TaskForm input');
+                    inputs.forEach(function(input) {
+                        input.style.cssText = modalStyles.input;
+                    });
 
-            function openFolderDialog(index, type) {
-                const picker = new Dashboard.DirectoryBrowser();
-                picker.show({
-                    header: type === "Source" ? "Select Source Folder" : "Select Target Folder",
-                    includeDirectories: true,
-                    includeFiles: false,
-                    callback: function (path) {
-                        if (path) {
-                            if (type === "Source") {
-                                currentMoverTasks[index].SourceShowFolder = path;
-                                document.getElementById('MoverTasksource' + index).value = path;
-                            } else if (type === "Target") {
-                                currentMoverTasks[index].TargetShowFolder = path;
-                                document.getElementById('moverTaskTarget' + index).value = path;
+                    // Field descriptions
+                    let descriptions = ['TaskTitleDescription', 'TaskMinCountDescription', 'TaskSourceDescription', 'TaskTargetDescription'];
+                    descriptions.forEach(function(descId) {
+                        let desc = document.getElementById(descId);
+                        if (desc) desc.style.cssText = modalStyles.fieldDescription;
+                    });
+
+                    // Error messages
+                    let errors = ['TitleError', 'SourceError', 'TargetError'];
+                    errors.forEach(function(errorId) {
+                        let error = document.getElementById(errorId);
+                        if (error) error.style.cssText = modalStyles.errorMessage;
+                    });
+
+                    // Folder input groups
+                    let sourceGroup = document.getElementById('SourceFolderInputGroup');
+                    let targetGroup = document.getElementById('TargetFolderInputGroup');
+                    if (sourceGroup) sourceGroup.style.cssText = modalStyles.folderInputGroup;
+                    if (targetGroup) targetGroup.style.cssText = modalStyles.folderInputGroup;
+
+                    // Folder select buttons
+                    let sourceBtn = document.getElementById('SelectSourceBtn');
+                    let targetBtn = document.getElementById('SelectTargetBtn');
+                    if (sourceBtn) sourceBtn.style.cssText = modalStyles.folderSelectBtn;
+                    if (targetBtn) targetBtn.style.cssText = modalStyles.folderSelectBtn;
+
+                    // Flex for folder input groups
+                    let sourceInput = document.getElementById('TaskSourceFolder');
+                    let targetInput = document.getElementById('TaskTargetFolder');
+                    if (sourceInput) sourceInput.style.flex = '1';
+                    if (targetInput) targetInput.style.flex = '1';
+                }
+
+                function renderTasksTable(tasks) {
+                    let container = document.getElementById('TasksTableContainer');
+                    container.style.cssText = tableStyles.container;
+
+                    if (!tasks || tasks.length === 0) {
+                        let emptyDiv = document.createElement('div');
+                        emptyDiv.style.cssText = tableStyles.emptyState;
+                        let h4 = document.createElement('h4');
+                        h4.style.cssText = tableStyles.emptyStateH4;
+                        h4.textContent = 'Keine Mappings konfiguriert';
+                        let p = document.createElement('p');
+                        p.textContent = 'Klicken Sie auf "Neues Mapping hinzufügen" um zu beginnen.';
+                        emptyDiv.appendChild(h4);
+                        emptyDiv.appendChild(p);
+                        container.innerHTML = '';
+                        container.appendChild(emptyDiv);
+                        return;
+                    }
+
+                    const table = document.createElement('table');
+                    table.style.cssText = tableStyles.table;
+
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+
+                    const headers = ['Titel', 'Min. Anzahl', 'Quellordner', 'Zielordner', 'Aktionen'];
+                    const widths = ['15%', '10%', '30%', '30%', '15%'];
+
+                    headers.forEach(function(headerText, index) {
+                        const th = document.createElement('th');
+                        th.style.cssText = tableStyles.th + ' width: ' + widths[index] + ';';
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    });
+
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    let tbody = document.createElement('tbody');
+
+                    tasks.forEach(function(task, index) {
+                        const row = document.createElement('tr');
+                        row.style.cssText = 'background: rgb(51, 51, 51);';
+                        row.onmouseover = function() { this.style.backgroundColor = '#3C3C3C'; };
+                        row.onmouseout = function() { this.style.backgroundColor = 'rgb(51, 51, 51)'; };
+
+                        // Title cell
+                        const titleCell = document.createElement('td');
+                        titleCell.style.cssText = tableStyles.td + ' width: 15%;';
+                        const strongTitle = document.createElement('strong');
+                        strongTitle.textContent = task.Title || 'Unbenannt';
+                        titleCell.appendChild(strongTitle);
+                        row.appendChild(titleCell);
+
+                        // Min count cell
+                        const countCell = document.createElement('td');
+                        countCell.style.cssText = tableStyles.td + ' width: 10%;';
+                        countCell.textContent = task.MinCount || 1;
+                        row.appendChild(countCell);
+
+                        // Source folder cell
+                        const sourceCell = document.createElement('td');
+                        sourceCell.style.cssText = tableStyles.td + ' width: 30%;';
+                        const sourceDiv = document.createElement('div');
+                        sourceDiv.style.cssText = tableStyles.pathCell;
+                        sourceDiv.title = task.SourceShowFolder || '';
+                        sourceDiv.textContent = task.SourceShowFolder || 'Nicht gesetzt';
+                        sourceCell.appendChild(sourceDiv);
+                        row.appendChild(sourceCell);
+
+                        // Target folder cell
+                        const targetCell = document.createElement('td');
+                        targetCell.style.cssText = tableStyles.td + ' width: 30%;';
+                        const targetDiv = document.createElement('div');
+                        targetDiv.style.cssText = tableStyles.pathCell;
+                        targetDiv.title = task.TargetShowFolder || '';
+                        targetDiv.textContent = task.TargetShowFolder || 'Nicht gesetzt';
+                        targetCell.appendChild(targetDiv);
+                        row.appendChild(targetCell);
+
+                        // Actions cell
+                        const actionsCell = document.createElement('td');
+                        actionsCell.style.cssText = tableStyles.td + ' width: 15%;';
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.style.cssText = tableStyles.taskActions;
+
+                        const editBtn = document.createElement('button');
+                        editBtn.type = 'button';
+                        editBtn.style.cssText = tableStyles.btnEdit;
+                        editBtn.textContent = 'Bearbeiten';
+                        editBtn.onclick = function() { editTask(index); };
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.type = 'button';
+                        deleteBtn.style.cssText = tableStyles.btnDelete;
+                        deleteBtn.textContent = 'Löschen';
+                        deleteBtn.onclick = function() { confirmDeleteTask(index); };
+
+                        actionsDiv.appendChild(editBtn);
+                        actionsDiv.appendChild(deleteBtn);
+                        actionsCell.appendChild(actionsDiv);
+                        row.appendChild(actionsCell);
+
+                        tbody.appendChild(row);
+                    });
+
+                    table.appendChild(tbody);
+                    container.innerHTML = '';
+                    container.appendChild(table);
+                }
+
+                function showTaskModal(isEdit, taskIndex) {
+                    editingTaskIndex = taskIndex;
+                    const modal = document.getElementById('TaskModal');
+                    const title = document.getElementById('ModalTitle');
+
+                    title.textContent = isEdit ? 'Task bearbeiten' : 'Neue Task hinzufügen';
+
+                    if (isEdit && taskIndex >= 0) {
+                        const task = currentMoverTasks[taskIndex];
+                        document.getElementById('TaskTitle').value = task.Title || '';
+                        document.getElementById('TaskMinCount').value = task.MinCount || 1;
+                        document.getElementById('TaskSourceFolder').value = task.SourceShowFolder || '';
+                        document.getElementById('TaskTargetFolder').value = task.TargetShowFolder || '';
+                    } else {
+                        document.getElementById('TaskForm').reset();
+                        document.getElementById('TaskMinCount').value = 1;
+                    }
+
+                    clearValidationErrors();
+
+                    // Apply styles and show modal
+                    applyModalStyles();
+                    document.body.style.overflow = 'hidden';
+                    modal.style.display = 'block';
+
+                    setTimeout(function() {
+                        document.getElementById('TaskTitle').focus();
+                    }, 100);
+                }
+
+                function hideTaskModal() {
+                    document.getElementById('TaskModal').style.display = 'none';
+                    document.body.style.overflow = '';
+                    editingTaskIndex = -1;
+                }
+
+                function editTask(index) {
+                    showTaskModal(true, index);
+                }
+
+                function addNewTask() {
+                    showTaskModal(false, -1);
+                }
+
+                function confirmDeleteTask(index) {
+                    const task = currentMoverTasks[index];
+                    const message = `Sind Sie sicher, dass Sie die Task "${task.Title || 'Unbenannt'}" löschen möchten?`;
+
+                    confirmationPopup(message, 'Task löschen?', function(confirm) {
+                        if (confirm) {
+                            deleteTask(index);
+                            showToast('Task gelöscht');
+                        }
+                        else {
+                            showToast('Löschvorgang abgebrochen');
+                        }
+                    });
+                }
+
+                function confirmationPopup(message, title, resultCallback) {
+                    if (typeof Dashboard !== 'undefined' && typeof Dashboard.confirm === 'function') {
+                        Dashboard.confirm(message, title, resultCallback);
+                    }
+                    else {
+                        const result = confirm(`${title}\n\n${message}`);
+                        resultCallback(result);
+                    }
+                }
+
+                function showToast(message) {
+                    if (typeof Dashboard !== 'undefined' && typeof Dashboard.alert === 'function') {
+                        Dashboard.alert(message);
+                    }
+                    else {
+                        alert(message);
+                    }
+                }
+
+                function deleteTask(index) {
+                    currentMoverTasks.splice(index, 1);
+                    renderTasksTable(currentMoverTasks);
+                }
+
+                function validateTaskForm() {
+                    let isValid = true;
+                    clearValidationErrors();
+
+                    const title = document.getElementById('TaskTitle').value.trim();
+                    const sourceFolder = document.getElementById('TaskSourceFolder').value.trim();
+                    const targetFolder = document.getElementById('TaskTargetFolder').value.trim();
+
+                    if (!title) {
+                        showValidationError('TitleError');
+                        isValid = false;
+                    }
+
+                    if (!sourceFolder) {
+                        showValidationError('SourceError');
+                        isValid = false;
+                    }
+
+                    if (!targetFolder) {
+                        showValidationError('TargetError');
+                        isValid = false;
+                    }
+
+                    const duplicateIndex = currentMoverTasks.findIndex(function (task, index) {
+                        return task.Title === title && index !== editingTaskIndex;
+                    });
+
+                    if (duplicateIndex >= 0) {
+                        showValidationError('TitleError', 'Ein Task mit diesem Titel existiert bereits');
+                        isValid = false;
+                    }
+
+                    return isValid;
+                }
+
+                function showValidationError(errorId, customMessage) {
+                    const errorElement = document.getElementById(errorId);
+                    if (errorElement) {
+                        if (customMessage) {
+                            errorElement.textContent = customMessage;
+                        }
+                        errorElement.style.display = 'block';
+                    }
+                }
+
+                function clearValidationErrors() {
+                    const errors = ['TitleError', 'SourceError', 'TargetError'];
+                    errors.forEach(function(errorId) {
+                        const error = document.getElementById(errorId);
+                        if (error) error.style.display = 'none';
+                    });
+                }
+
+                function saveTask() {
+                    if (!validateTaskForm()) {
+                        return;
+                    }
+
+                    const task = {
+                        Title: document.getElementById('TaskTitle').value.trim(),
+                        MinCount: parseInt(document.getElementById('TaskMinCount').value) || 1,
+                        SourceShowFolder: document.getElementById('TaskSourceFolder').value.trim(),
+                        TargetShowFolder: document.getElementById('TaskTargetFolder').value.trim()
+                    };
+
+                    if (editingTaskIndex >= 0) {
+                        currentMoverTasks[editingTaskIndex] = task;
+                    } else {
+                        currentMoverTasks.push(task);
+                    }
+
+                    renderTasksTable(currentMoverTasks);
+                    hideTaskModal();
+                }
+
+                function openFolderDialog(inputId, headerText) {
+                    try {
+                        if (typeof Dashboard !== 'undefined' && Dashboard.DirectoryBrowser) {
+                            const picker = new Dashboard.DirectoryBrowser();
+                            picker.show({
+                                header: headerText,
+                                includeDirectories: true,
+                                includeFiles: false,
+                                callback: function (path) {
+                                    if (path) {
+                                        document.getElementById(inputId).value = path;
+                                    }
+                                    picker.close();
+                                }
+                            });
+                        } else {
+                            // Fallback wenn Dashboard nicht verfügbar ist
+                            var currentValue = document.getElementById(inputId).value;
+                            var newPath = prompt(headerText + '\nAktueller Pfad: ' + currentValue, currentValue);
+                            if (newPath !== null && newPath.trim() !== '') {
+                                document.getElementById(inputId).value = newPath.trim();
                             }
                         }
-                        picker.close();
+                    } catch (e) {
+                        console.error('Error opening folder dialog:', e);
+                        // Fallback
+                        var currentValue = document.getElementById(inputId).value;
+                        var newPath = prompt(headerText + '\nAktueller Pfad: ' + currentValue, currentValue);
+                        if (newPath !== null && newPath.trim() !== '') {
+                            document.getElementById(inputId).value = newPath.trim();
+                        }
                     }
-                });
-            }
+                }
+
+                // Initialize page when loaded
+                function initializePage() {
+                    applyInlineStyles();
+
+                    // Apply button styles
+                    const addBtn = document.getElementById('AddTaskBtn');
+                    if (addBtn) {
+                        addBtn.style.cssText = tableStyles.btnAdd;
+                    }
+
+                    const taskContainer = document.getElementById('TaskManagementContainer');
+                    if (taskContainer) {
+                        taskContainer.style.cssText = tableStyles.container;
+                    }
+
+                    // Apply modal styles initially
+                    applyModalStyles();
+                }
+
+                // Event Listeners Setup
+                function setupEventListeners() {
+                    // Button events
+                    const addBtn = document.getElementById('AddTaskBtn');
+                    if (addBtn) addBtn.onclick = addNewTask;
+
+                    const closeBtn = document.getElementById('CloseModalBtn');
+                    if (closeBtn) closeBtn.onclick = hideTaskModal;
+
+                    const cancelBtn = document.getElementById('CancelBtn');
+                    if (cancelBtn) cancelBtn.onclick = hideTaskModal;
+
+                    const saveBtn = document.getElementById('SaveTaskBtn');
+                    if (saveBtn) saveBtn.onclick = saveTask;
+
+                    const selectSourceBtn = document.getElementById('SelectSourceBtn');
+                    if (selectSourceBtn) {
+                        selectSourceBtn.onclick = function() {
+                            openFolderDialog('TaskSourceFolder', 'Quellordner auswählen');
+                        };
+                    }
+
+                    const selectTargetBtn = document.getElementById('SelectTargetBtn');
+                    if (selectTargetBtn) {
+                        selectTargetBtn.onclick = function() {
+                            openFolderDialog('TaskTargetFolder', 'Zielordner auswählen');
+                        };
+                    }
+
+                    // Keyboard event handlers
+                    document.addEventListener('keydown', function(event) {
+                        if (event.key === 'Escape') {
+                            const modal = document.getElementById('TaskModal');
+                            if (modal && modal.style.display === 'block') {
+                                hideTaskModal();
+                            }
+                        }
+                    });
+
+                    // Close modal when clicking overlay
+                    var modal = document.getElementById('TaskModal');
+                    if (modal) {
+                        modal.onclick = function(event) {
+                            if (event.target === this) {
+                                hideTaskModal();
+                            }
+                        };
+                    }
+                }
+
+                // Page initialization - wird sofort ausgeführt
+                function initializeNow() {
+                    initializePage();
+                    setupEventListeners();
+                }
+
+                // Page initialization for Jellyfin
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', initializeNow);
+                } else {
+                    initializeNow();
+                }
+
+                // Page show event
+                const configPage = document.querySelector('#TemplateConfigPage');
+                if (configPage) {
+                    configPage.addEventListener('pageshow', function() {
+                        initializePage();
+                        if (typeof Dashboard !== 'undefined' && Dashboard.showLoadingMsg) {
+                            Dashboard.showLoadingMsg();
+                        }
+                        if (typeof ApiClient !== 'undefined' && ApiClient.getPluginConfiguration) {
+                            ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                                const deleteSourceEl = document.querySelector('#DeleteSourceSetting');
+                                const audioDescEl = document.querySelector('#AudioDescriptionPatterns');
+                                const skipAudioEl = document.querySelector('#SkipAudioDescription');
+
+                                if (deleteSourceEl) deleteSourceEl.checked = config.DeleteSource;
+                                if (audioDescEl) audioDescEl.value = (config.AudioDescriptionPatterns || []).join(', ');
+                                if (skipAudioEl) skipAudioEl.checked = config.SkipAudioDescription;
+
+                                currentMoverTasks = config.MoverTasks || [];
+                                renderTasksTable(currentMoverTasks);
+
+                                if (typeof Dashboard !== 'undefined' && Dashboard.hideLoadingMsg) {
+                                    Dashboard.hideLoadingMsg();
+                                }
+                            }).catch(function(error) {
+                                console.error('Error loading configuration:', error);
+                                if (typeof Dashboard !== 'undefined' && Dashboard.hideLoadingMsg) {
+                                    Dashboard.hideLoadingMsg();
+                                }
+                            });
+                        }
+                    });
+                }
+
+                // Form submission
+                const configForm = document.querySelector('#TemplateConfigForm');
+                if (configForm) {
+                    configForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        if (typeof Dashboard !== 'undefined' && Dashboard.showLoadingMsg) {
+                            Dashboard.showLoadingMsg();
+                        }
+
+                        if (typeof ApiClient !== 'undefined' && ApiClient.getPluginConfiguration) {
+                            ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
+                                const deleteSourceEl = document.querySelector('#DeleteSourceSetting');
+                                const audioDescEl = document.querySelector('#AudioDescriptionPatterns');
+                                const skipAudioEl = document.querySelector('#SkipAudioDescription');
+
+                                if (deleteSourceEl) config.DeleteSource = deleteSourceEl.checked;
+                                if (audioDescEl) {
+                                    config.AudioDescriptionPatterns = audioDescEl.value
+                                        .split(',')
+                                        .map(function(pattern) { return pattern.trim(); })
+                                        .filter(function(pattern) { return pattern.length > 0; });
+                                }
+                                if (skipAudioEl) config.SkipAudioDescription = skipAudioEl.checked;
+
+                                config.MoverTasks = currentMoverTasks;
+
+                                return ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config);
+                            }).then(function (result) {
+                                if (typeof Dashboard !== 'undefined' && Dashboard.processPluginConfigurationUpdateResult) {
+                                    Dashboard.processPluginConfigurationUpdateResult(result);
+                                }
+                            }).catch(function(error) {
+                                console.error('Error saving configuration:', error);
+                                if (typeof Dashboard !== 'undefined' && Dashboard.hideLoadingMsg) {
+                                    Dashboard.hideLoadingMsg();
+                                }
+                            });
+                        }
+
+                        return false;
+                    });
+                }
+            })();
         </script>
     </div>
 </body>

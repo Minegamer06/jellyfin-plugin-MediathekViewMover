@@ -29,7 +29,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         private readonly IServerApplicationPaths _configPaths;
         private static readonly string[] VideoExtensions = [".mp4", ".mkv", ".avi", ".mov"];
         private static readonly string[] SubtitleExtensions = [".srt", ".ass", ".ssa"];
-        private static readonly string[] UnsupportedExtensions = [".ttml", ".jpg"];
+        private static readonly string[] UnsupportedExtensions = [".ttml", ".jpg", ".txt"];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MediaConversionService"/> class.

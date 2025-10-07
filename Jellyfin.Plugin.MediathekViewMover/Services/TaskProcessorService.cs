@@ -158,6 +158,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
         {
             try
             {
+                _logger.LogInformation("Verarbeite Episode S{Season:D2}E{Episode:D2} - {EpisodeTitle} mit {FileCount} Dateien", episodeInfo.Season, episodeInfo.Episode, files.First().File.Name, files.Count);
                 var ageThreshold = TimeSpan.FromMinutes(60);
 
                 if (HasDirtyFiles(files.Select(f => f.File.FullName), ageThreshold))
@@ -168,7 +169,7 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
 
                 var skipAD = Plugin.Instance!.Configuration.SkipAudioDescription;
                 // Gruppiere Dateien nach Typ
-                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f) && (!skipAD || f.IsAudioDescription )).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
+                var videoFiles = files.Where(f => _mediaConverter.IsVideoFile(f) && (!skipAD || f.IsAudioDescription)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
                 var subtitleFiles = files.Where(f => _mediaConverter.IsSubtitleFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
                 var unsupportedFiles = files.Where(f => _mediaConverter.IsUnsupportedFile(f)).OrderBy(d => d.IsAudioDescription).ThenBy(f => f.File.Name.Length).ToList();
 
@@ -256,6 +257,10 @@ namespace Jellyfin.Plugin.MediathekViewMover.Services
             {
                 _logger.LogError(ex, "Fehler beim Verarbeiten der Episode S{Season:D2}E{Episode:D2}", episodeInfo.Season, episodeInfo.Episode);
                 throw;
+            }
+            finally
+            {
+                _logger.LogInformation("Verarbeitung von Episode S{Season:D2}E{Episode:D2} - {EpisodeTitle} mit {FileCount} Dateien abgeschlossen", episodeInfo.Season, episodeInfo.Episode, files.First().File.Name, files.Count);
             }
         }
 
